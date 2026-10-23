@@ -34,7 +34,7 @@
   // ------------------------------------------------------------------
   const BGM = (function () {
     let el = null, started = false, btn = null, panel = null, slider = null, muteBtn = null, pct = null;
-    let level = 1, lastLevel = 1;   // 0..1, not persisted on purpose
+    let level = 0.2, lastLevel = 0.2;   // 0..1, not persisted on purpose
     const cfg = () => (EDITION.settings.reveal && EDITION.settings.reveal.cake && EDITION.settings.reveal.cake.song) || null;
     const isMuted = () => level === 0;
     try { SS.ls.del('bgmMuted'); } catch (e) { /* old saved mute from earlier builds */ }
