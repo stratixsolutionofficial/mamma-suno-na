@@ -364,10 +364,13 @@
   // ------------------------------------------------------------------
   function pin() {
     if (!needsPin()) return gate();
+    // PIN length follows EDITION.pin (supports 4-6 digits), so the dots and the
+    // "all digits entered" check always match the real PIN.
+    const PIN_LEN = String(EDITION.pin).length;
     render(`<main class="screen center">
       <h1 class="big-title">${esc(t('pin.title'))}</h1>
       <p class="muted">${esc(r(EDITION.pinHint))}</p>
-      <div class="pin-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="pin-dots" aria-hidden="true">${'<i></i>'.repeat(PIN_LEN)}</div>
       <p class="pin-msg" role="alert"></p>
       <div class="keypad">
         ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button data-k="${n}" aria-label="${n}">${n}</button>`).join('')}
@@ -382,9 +385,9 @@
       const st = lockState();
       if (st.lockedUntil > Date.now()) { msg.textContent = t('pin.locked'); return; }
       if (k === 'x') { val = val.slice(0, -1); paint(); return; }
-      if (val.length >= 4) return;
+      if (val.length >= PIN_LEN) return;
       val += k; paint();
-      if (val.length === 4) {
+      if (val.length === PIN_LEN) {
         if (val === String(EDITION.pin)) {
           SS.ls.set('pinOk', true); SS.ls.del('pinAttempts');
           setTimeout(gate, 250);

@@ -26,7 +26,7 @@ const EDITION = {
   timezoneOffset: "+05:30",             // Asia/Kolkata
   localeDefault: "hinglish",            // "hinglish" | "hindi"
   theme: "maa-haldi",
-  pin: "PLACEHOLDER",                   // 4 digits, e.g. Sunny ka janamdin DDMM. PLACEHOLDER = no PIN screen.
+  pin: "231070",                        // digits (4-6). PLACEHOLDER = no PIN screen.
   pinHint: "{{sunny}} ka janamdin (DDMM)",
   helpContact: { label: "Sunny", phone: "PLACEHOLDER" },  // "+91XXXXXXXXXX"
   settings: {

@@ -366,7 +366,7 @@
         : (kind === 'photo'
           ? `<img class="thumb" src="${esc(it.url)}" alt="${esc(it.caption || '')}">`
           : `<audio class="thumb" src="${esc(it.url)}" controls style="aspect-ratio:auto;height:44px;width:100%"></audio>`);
-      return `<div class="mcard" data-kind="${kind}" data-id="${esc(it.id)}" data-ext="${esc(it.ext)}">
+      return `<div class="mcard" data-kind="${kind}" data-id="${esc(it.id)}" data-ext="${esc(it.ext)}" data-order="${it.order != null ? esc(String(it.order)) : ''}">
         ${thumb}
         <div class="body">
           <textarea class="cap" placeholder="Caption / kis se mili">${esc(it.caption || '')}</textarea>
@@ -381,9 +381,13 @@
       el.querySelector('.save').addEventListener('click', async () => {
         if (!ensureKey()) return;
         st.textContent = 'saving…';
-        const meta = { caption: el.querySelector('.cap').value.trim(), updatedAt: Date.now() };
+        // Preserve the item's existing sort order (the sidecar is overwritten
+        // wholesale, so we must re-send it or the collage would reshuffle).
+        const prevOrder = el.dataset.order !== '' ? Number(el.dataset.order) : Date.now();
+        const meta = { caption: el.querySelector('.cap').value.trim(), order: prevOrder, updatedAt: Date.now() };
         try {
           await apiPut(kind === 'photo' ? photoMeta(id) : videoMeta(id), JSON.stringify(meta), 'application/json');
+          el.dataset.order = String(prevOrder);
           st.textContent = 'saved';
         } catch (e) { st.textContent = e.message; }
       });
@@ -425,8 +429,9 @@
         const okVideo = VID_EXT.includes(ext) || AUD_EXT.includes(ext);
         if (kind === 'photo' && !okPhoto) { say(f.name + ': photo nahi', true); continue; }
         if (kind === 'video' && !okVideo) { say(f.name + ': video/audio nahi', true); continue; }
-        // audio recordings share the videos/ folder but need an allowed ext; map to m4a container name if needed
-        const useExt = (kind === 'video' && AUD_EXT.includes(ext)) ? 'm4a' : ext;
+        // Keep the file's real extension (the server allows mp3/ogg/wav/aac under
+        // videos/ too). Only an unknown ext falls back to m4a so the path is valid.
+        const useExt = (kind === 'video' && ext === 'bin') ? 'm4a' : ext;
         const id = slug(f.name.replace(/\.[^.]+$/, '')) + '-' + Date.now().toString(36) + '-' + i;
         const path = kind === 'photo' ? photoPath(id, useExt) : videoPath(id, useExt);
         say('Uploading ' + (i + 1) + '/' + list.length + ' — ' + f.name);
