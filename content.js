@@ -393,7 +393,6 @@ const COPY = {
   "menu.close": ["Close"],
   "bgm.mute": ["Mute music", "संगीत बंद करें"],
   "bgm.unmute": ["Play music", "संगीत चलाएँ"],
-  "bgm.volume": ["Music volume", "संगीत की आवाज़"],
   "gallery.loading": ["Khul raha hai…", "खुल रहा है…"],
   "gallery.offline": ["Abhi load nahi ho paaya. Net check karke phir dekhiye.", "अभी लोड नहीं हो पाया। नेट जाँच कर फिर देखिए।"],
   "gallery.photos.title": ["Tasveerein", "तस्वीरें"],
