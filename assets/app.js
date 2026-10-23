@@ -28,13 +28,31 @@
 
   // ------------------------------------------------------------------
   // Background music (birthday song) — lives OUTSIDE the route lifecycle so it
-  // keeps playing as she moves through the book. A floating mute button (top
-  // right) lets her silence it. Mute choice is remembered on the device.
+  // keeps playing as she moves through the book. A floating button (top right)
+  // opens a small volume panel: slider + mute. The level is kept for this visit
+  // only, so every time she opens the app the song starts ON.
   // ------------------------------------------------------------------
   const BGM = (function () {
-    let el = null, started = false, btn = null;
+    let el = null, started = false, btn = null, panel = null, slider = null, muteBtn = null, pct = null;
+    let level = 0.2, lastLevel = 0.2;   // 0..1, not persisted on purpose
     const cfg = () => (EDITION.settings.reveal && EDITION.settings.reveal.cake && EDITION.settings.reveal.cake.song) || null;
-    const isMuted = () => SS.ls.get('bgmMuted', false);
+    const isMuted = () => level === 0;
+    try { SS.ls.del('bgmMuted'); } catch (e) { /* old saved mute from earlier builds */ }
+
+    // iOS Safari ignores element.volume (always 1). There, in-between levels go
+    // through a Web Audio gain node, hooked up lazily inside a slider gesture
+    // so the AudioContext is allowed to run.
+    const volumeWorks = (() => { try { const a = new Audio(); a.volume = 0.5; return Math.abs(a.volume - 0.5) < 0.01; } catch (e) { return true; } })();
+    let gain = null;
+    function ensureGain() {
+      if (gain || volumeWorks || !el) return;
+      try {
+        const ac = SS.primeAudio();
+        const src = ac.createMediaElementSource(el);
+        gain = ac.createGain();
+        src.connect(gain); gain.connect(ac.destination);
+      } catch (e) { gain = null; }
+    }
 
     function ensureButton() {
       if (btn) return btn;
@@ -43,24 +61,73 @@
       btn.type = 'button';
       btn.className = 'bgm-toggle';
       btn.hidden = true; // shown once the song starts
+      btn.setAttribute('aria-haspopup', 'true');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-controls', 'bgm-panel');
       document.body.appendChild(btn);
-      btn.addEventListener('click', () => setMuted(!isMuted()));
+
+      panel = document.createElement('div');
+      panel.id = 'bgm-panel';
+      panel.className = 'bgm-panel';
+      panel.hidden = true;
+      panel.setAttribute('role', 'group');
+      panel.setAttribute('aria-label', t('bgm.volume'));
+      panel.innerHTML = `
+        <button type="button" class="bgm-mute"></button>
+        <input type="range" class="bgm-slider" min="0" max="100" step="1" aria-label="${esc(t('bgm.volume'))}">
+        <span class="bgm-pct" aria-hidden="true"></span>`;
+      document.body.appendChild(panel);
+      muteBtn = panel.querySelector('.bgm-mute');
+      slider = panel.querySelector('.bgm-slider');
+      pct = panel.querySelector('.bgm-pct');
+
+      btn.addEventListener('click', (e) => { e.stopPropagation(); togglePanel(); });
+      muteBtn.addEventListener('click', () => setMuted(!isMuted()));
+      slider.addEventListener('input', () => setLevel(Number(slider.value) / 100));
+      // close on outside tap / Escape
+      document.addEventListener('pointerdown', (e) => {
+        if (!panel.hidden && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) togglePanel(false);
+      }, true);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) { togglePanel(false); btn.focus(); } });
       paintButton();
       return btn;
+    }
+    function togglePanel(open) {
+      if (!panel) return;
+      const want = typeof open === 'boolean' ? open : panel.hidden;
+      panel.hidden = !want;
+      btn.setAttribute('aria-expanded', String(want));
+      if (want) { paintButton(); slider.focus({ preventScroll: true }); }
     }
     function paintButton() {
       if (!btn) return;
       const muted = isMuted();
-      btn.setAttribute('aria-pressed', String(muted));
-      btn.setAttribute('aria-label', muted ? t('bgm.unmute') : t('bgm.mute'));
-      btn.title = muted ? t('bgm.unmute') : t('bgm.mute');
+      const label = t('bgm.volume') + ': ' + Math.round(level * 100) + '%';
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
+      btn.classList.toggle('is-muted', muted);
       btn.innerHTML = muted ? MOTIF.speakerOff() : MOTIF.speakerOn();
+      if (panel) {
+        slider.value = String(Math.round(level * 100));
+        slider.style.setProperty('--fill', Math.round(level * 100) + '%');
+        slider.setAttribute('aria-valuetext', Math.round(level * 100) + '%');
+        pct.textContent = Math.round(level * 100) + '%';
+        muteBtn.innerHTML = (muted ? MOTIF.speakerOff() : MOTIF.speakerOn()) + `<span class="sr-only">${esc(muted ? t('bgm.unmute') : t('bgm.mute'))}</span>`;
+        muteBtn.setAttribute('aria-pressed', String(muted));
+      }
     }
-    function setMuted(m) {
-      SS.ls.set('bgmMuted', m);
-      if (el) { applyLevel(); if (!m && el.paused && started) el.play().catch(() => {}); }
+    function setLevel(v) {
+      level = Math.max(0, Math.min(1, v));
+      if (level > 0) lastLevel = level;
+      if (level > 0 && level < 1) ensureGain(); // runs inside the slider gesture
+      if (el) {
+        applyLevel();
+        if (level > 0 && el.paused && started) el.play().catch(() => {});
+      }
+      if (gain) { try { const ac = SS.primeAudio(); if (ac.state === 'suspended') ac.resume(); } catch (e) { /* */ } }
       paintButton();
     }
+    function setMuted(m) { setLevel(m ? 0 : (lastLevel || 1)); }
 
     // ---- Duck under videos ----
     // While any <video> (greeting video, collage/gallery, greeting wall) is
@@ -71,15 +138,21 @@
     let ducked = false, pruneTimer = 0;
     function applyLevel() {
       if (!el) return;
-      el.muted = isMuted() || ducked;
-      el.volume = ducked ? 0 : 1;
+      // data-duck="soft" videos (cover collage) only dip the song; others silence it.
+      // Without a working volume (iOS, no gain node yet) a dip isn't possible: silence.
+      const soft = ducked && [...playingVideos].every((v) => v.dataset.duck === 'soft') && (volumeWorks || gain);
+      const target = ducked ? (soft ? level * 0.15 : 0) : level;
+      el.muted = target === 0;
+      if (gain) { el.volume = 1; gain.gain.value = target; }
+      else el.volume = target;
     }
     function refreshDuck() {
       // a video removed from the page while playing never reports 'pause' to
       // the document, so drop anything detached/paused on every check
       playingVideos.forEach((v) => { if (!v.isConnected || v.paused || v.ended) playingVideos.delete(v); });
       const want = playingVideos.size > 0;
-      if (want !== ducked) { ducked = want; applyLevel(); }
+      if (want !== ducked) ducked = want;
+      applyLevel(); // the set may have changed even if ducked didn't (soft vs hard)
       clearInterval(pruneTimer);
       if (ducked) pruneTimer = setInterval(refreshDuck, 1000);
     }
@@ -125,14 +198,21 @@
       ensureButton();
       show();
     }
-    function show() { ensureButton(); btn.hidden = false; paintButton(); }
-    // keep playing when tab regains focus (iate autoplay already unlocked by then)
+    function show() {
+      ensureButton();
+      btn.hidden = false;
+      document.body.classList.add('has-bgm');
+      paintButton();
+    }
+    // keep playing when tab regains focus (autoplay already unlocked by then)
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && el && started && !isMuted() && el.paused) el.play().catch(() => {});
+        if (document.visibilityState !== 'visible' || !el || !started) return;
+        if (gain) { try { const ac = SS.primeAudio(); if (ac.state === 'suspended') ac.resume(); } catch (e) { /* */ } }
+        if (!isMuted() && el.paused) el.play().catch(() => {});
       });
     }
-    return { start, setMuted, isMuted };
+    return { start, setMuted, setLevel, isMuted };
   })();
 
   // ------------------------------------------------------------------
