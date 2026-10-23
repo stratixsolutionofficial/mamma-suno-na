@@ -504,47 +504,139 @@ body.desk .grain { z-index: 3; opacity: .4; } /* the paper texture tile, over th
 .env-letter { background: #FFFBF3; margin: -4px 10px 0; padding: 4px 16px 14px; box-shadow: 0 10px 18px -12px rgba(0,0,0,.45); transform: rotate(1.6deg); }
 .env-letter .answer { margin-top: 10px; }
 
-/* closed cover */
-.cover-screen { justify-content: center; }
-.cover-menu { position: fixed; top: calc(8px + var(--safe-t)); right: 8px; z-index: 5; color: var(--ss-ink-soft); }
-.book.cover-book { display: block; padding: 0; background: none; box-shadow: none; min-height: 0; border-radius: 0;
-  width: min(calc(100% - 12px), 26rem, calc((100dvh - 110px) * .72)); aspect-ratio: 5 / 7; margin: 0 auto 64px 0; touch-action: pan-y; }
-@media (min-width: 600px) { .book.cover-book { margin: 0 auto 64px; } }
-.cover { position: relative; display: block; width: 100%; height: 100%; border: 0; padding: 0; cursor: pointer; overflow: hidden; color: #F3E2C0; text-align: center;
-  border-radius: 3px 10px 10px 3px; background-color: #6B2B1E;
-  background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(0,0,0,.06) 0 1px, transparent 1px 3px),
-    radial-gradient(ellipse at 40% 28%, rgba(255,200,150,.14), transparent 60%), radial-gradient(ellipse at 100% 100%, rgba(0,0,0,.28), transparent 60%);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.3), 2px 1px 0 #EFE4CF, 4px 2px 0 #DCCBAA, 6px 3px 0 #EEE2CB, 7px 4px 0 #CFBB97, 0 26px 40px -18px rgba(30,15,5,.7); }
-.cover:focus-visible { outline-offset: 6px; }
-.cover .spine { position: absolute; left: 0; top: 0; bottom: 0; width: 30px; background: linear-gradient(90deg, rgba(0,0,0,.38), rgba(0,0,0,.1) 60%, rgba(255,220,180,.14) 84%, rgba(0,0,0,.28)); }
-.spine-label { position: absolute; left: 5px; bottom: 16%; writing-mode: vertical-rl; transform: rotate(180deg); padding: 10px 3px; border-radius: 2px;
-  background: var(--ss-haldi); color: #4A1E12; font-family: var(--ss-font-q); font-weight: 600; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
-.cover .cloth { position: absolute; inset: 0 0 0 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 26px 90px; }
-.foil-frame { position: absolute; inset: 16px 16px 16px 12px; border: 1.5px solid rgba(214,174,92,.7); border-radius: 3px; box-shadow: inset 0 0 0 4px #6B2B1E, inset 0 0 0 5px rgba(214,174,92,.45); }
-.cover-motif .motif { width: 92px; height: 92px; color: #D6AE5C; }
-.cover-title { font-family: var(--ss-font-q); font-weight: 500; font-size: clamp(2rem, 8.6vw, 2.5rem); line-height: 1.12; margin: 10px 0 8px;
-  background: linear-gradient(100deg, #B48C3A 20%, #FBE3A0 45%, #B48C3A 70%); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
-.cover.shimmer .cover-title { animation: foil 1.4s var(--ss-ease-soft) 400ms 1 both; }
-.cover-sub { font-family: var(--ss-font-q); font-size: .82rem; letter-spacing: .24em; text-transform: uppercase; color: #D6AE5C; }
-.cover-hint { position: absolute; bottom: 30px; left: 0; right: 0; font-family: var(--ss-font-hand); font-style: italic; font-size: 1.05rem; color: #F3E2C0; animation: hint-breathe var(--ss-d-breath) var(--ss-ease-breath) infinite alternate; transition: opacity 300ms; }
-@keyframes hint-breathe { from { opacity: .6; } to { opacity: .95; } }
-.mauli-tie { position: absolute; left: 0; right: 0; top: 62%; height: 60px; pointer-events: none; }
+/* closed cover: peacock cloth, gold-foil jharokha, a mauli tied across.
+   The desk around it holds the collage (prints partly under the book). */
+:root {
+  --cv-cloth: #12403E; --cv-cloth-hi: #1C5A57; --cv-cloth-lo: #092826;
+  --cv-gold: #D8B36A; --cv-gold-hi: #F6E2AE; --cv-gold-lo: #A7803C;
+  /* tone-on-tone block-print buti, half-drop repeat */
+  --cv-buti: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='52' viewBox='0 0 44 52'%3E%3Cg fill='%23BFE6DC' fill-opacity='.075'%3E%3Cellipse cx='11' cy='8' rx='2.1' ry='4'/%3E%3Cellipse cx='11' cy='18' rx='2.1' ry='4'/%3E%3Cellipse cx='6' cy='13' rx='4' ry='2.1'/%3E%3Cellipse cx='16' cy='13' rx='4' ry='2.1'/%3E%3Ccircle cx='33' cy='13' r='1.3'/%3E%3Cellipse cx='33' cy='34' rx='2.1' ry='4'/%3E%3Cellipse cx='33' cy='44' rx='2.1' ry='4'/%3E%3Cellipse cx='28' cy='39' rx='4' ry='2.1'/%3E%3Cellipse cx='38' cy='39' rx='4' ry='2.1'/%3E%3Ccircle cx='11' cy='39' r='1.3'/%3E%3C/g%3E%3Cg fill='%23D8B36A' fill-opacity='.16'%3E%3Ccircle cx='11' cy='13' r='1.4'/%3E%3Ccircle cx='33' cy='39' r='1.4'/%3E%3C/g%3E%3C/svg%3E");
+}
+body.cover-desk { background-color: var(--desk);
+  background-image: radial-gradient(ellipse 70% 60% at 50% 42%, rgba(255,247,230,.55), transparent 70%), radial-gradient(ellipse 120% 100% at 50% 50%, transparent 55%, rgba(110,80,40,.28) 100%); }
+.cover-screen { position: relative; z-index: 0; justify-content: center; overflow: hidden; }
+.cover-menu { position: fixed; top: calc(8px + var(--safe-t)); right: 8px; z-index: 80; color: var(--ss-ink-soft); background: rgba(246,239,227,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+/* the song's speaker button sits top-right too: keep the menu beside it, not under it */
+body:has(#bgm-toggle:not([hidden])) .cover-menu { right: 62px; }
+
+.book.cover-book { position: relative; z-index: 50; isolation: isolate; display: block; padding: 0; background: none; box-shadow: none; min-height: 0; border-radius: 0;
+  width: min(calc(100% - 12px), 26rem, calc((100dvh - 110px) * .72)); aspect-ratio: 5 / 7; margin: 0 auto 64px; touch-action: pan-y;
+  transform: perspective(1600px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform 500ms var(--ss-ease-settle), filter 360ms var(--ss-ease-soft); }
+/* leave the desk visible around the book for the prints */
+.has-collage .book.cover-book { width: min(78vw, 24rem, calc((100dvh - 190px) * .714)); }
+/* page block (right edge) and the back board just beyond it */
+.book.cover-book::before { content: ''; position: absolute; z-index: -1; top: 5px; bottom: 4px; right: -6px; width: 24px; border-radius: 0 3px 3px 0;
+  background: repeating-linear-gradient(90deg, #F5EBD6 0 1px, #E2D2B3 1px 2px); box-shadow: inset -1px 0 0 rgba(90,60,20,.15); }
+.book.cover-book::after { content: ''; position: absolute; z-index: -2; inset: 2px -9px -3px 2px; border-radius: 2px 7px 7px 2px; background: var(--cv-cloth-lo);
+  box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 14px 26px -12px rgba(8,28,26,.6), 0 40px 70px -30px rgba(50,30,10,.55); }
+
+.cover { position: relative; display: block; width: 100%; height: 100%; border: 0; padding: 0; cursor: pointer; overflow: hidden; color: var(--cv-gold-hi); text-align: center;
+  border-radius: 2px 6px 6px 2px; background-color: var(--cv-cloth);
+  background-image:
+    radial-gradient(ellipse 90% 70% at var(--mx, 34%) var(--my, 20%), rgba(255,255,255,.11), transparent 60%),
+    radial-gradient(ellipse 120% 90% at 100% 100%, rgba(0,0,0,.34), transparent 60%),
+    linear-gradient(90deg, rgba(0,0,0,.16), transparent 14%, transparent 90%, rgba(0,0,0,.18)),
+    var(--cv-buti),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 2px);
+  background-size: auto, auto, auto, 44px 52px, auto;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.08); }
+.cover:focus-visible { outline-offset: 8px; }
+/* spine: darker cloth, a rounded highlight, two gold bands, and the hinge groove */
+.cover .spine { position: absolute; left: 0; top: 0; bottom: 0; width: 26px;
+  background: linear-gradient(90deg, #061C1B 0, #0D3331 26%, #1D5653 58%, #0E3432 84%, #071F1E 100%);
+  box-shadow: 1px 0 0 rgba(0,0,0,.42), 2px 0 0 rgba(255,255,255,.07), 6px 0 8px -3px rgba(0,0,0,.4); }
+.cover .spine::before, .cover .spine::after { content: ''; position: absolute; left: 0; right: 0; height: 7px; border-top: 1px solid rgba(216,179,106,.55); border-bottom: 1px solid rgba(216,179,106,.55); }
+.cover .spine::before { top: 7%; }
+.cover .spine::after { bottom: 7%; }
+.cover .cloth { position: absolute; inset: 0 0 0 26px; }
+.cv-arch { position: absolute; left: 15%; right: 15%; top: 8%; height: 62%; width: 70%; color: var(--cv-gold); overflow: visible; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
+.cv-inner { position: absolute; left: 17%; right: 17%; top: 8%; height: 62%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15%; }
+.cover-motif .motif { display: block; width: 3.6rem; height: 3.6rem; color: var(--cv-gold); stroke-width: 1.6; margin: 0 auto 10px; }
+.cv-pre { font-family: var(--ss-font-q); font-style: italic; font-weight: 400; font-variation-settings: 'SOFT' 100, 'WONK' 1, 'opsz' 48; font-size: clamp(1.05rem, 4.6vw, 1.4rem); line-height: 1.1; color: var(--cv-gold-hi); opacity: .92; }
+.cover-title { display: block; font-family: var(--ss-font-q); font-weight: 500; font-variation-settings: 'SOFT' 30, 'WONK' 0, 'opsz' 144; font-size: clamp(2.3rem, 10.5vw, 3.3rem); line-height: 1; letter-spacing: -.01em; margin: 2px 0 0;
+  /* flat foil at rest; a narrow highlight band crosses it once (shimmer) */
+  background: linear-gradient(105deg, var(--cv-gold) 0 42%, var(--cv-gold-hi) 50%, var(--cv-gold) 58% 100%); background-size: 320% 100%; background-position: 0 0;
+  -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 1px 0 rgba(0,0,0,.4)); }
+.cover.shimmer .cover-title { animation: foil 1.6s var(--ss-ease-soft) 500ms 1 both; }
+.cv-rule { display: flex; align-items: center; gap: 6px; margin: 12px 0 8px; }
+.cv-rule i { width: 22px; height: 1px; background: var(--cv-gold); opacity: .6; }
+.cv-rule b { width: 5px; height: 5px; background: var(--cv-gold); transform: rotate(45deg); opacity: .85; }
+.cv-deva { font-family: var(--ss-font-deva); font-size: clamp(.85rem, 3.4vw, 1rem); line-height: 1.4; color: var(--cv-gold); opacity: .8; }
+.cover-sub { position: absolute; left: 0; right: 0; bottom: 5.5%; font-family: var(--ss-font-q); font-size: clamp(.58rem, 2.3vw, .7rem); font-weight: 500; letter-spacing: .3em; text-transform: uppercase; color: var(--cv-gold); opacity: .85; padding: 0 10px; }
+/* one soft pass of light across the cloth (first visit of the session) */
+.cv-sheen { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(112deg, transparent 38%, rgba(255,246,220,.14) 49%, transparent 60%); transform: translateX(-110%); }
+.cover.shimmer .cv-sheen { animation: sheen 1.8s var(--ss-ease-soft) 300ms 1 both; }
+@keyframes sheen { to { transform: translateX(110%); } }
+
+.mauli-tie { position: absolute; left: 0; right: 0; top: 71%; height: 80px; pointer-events: none; }
 .mauli-tie svg { position: absolute; display: block; overflow: visible; will-change: transform, opacity; }
 .mt-l { left: 0; top: 20px; width: 72%; height: 20px; }
 .mt-r { left: 72%; right: 0; top: 20px; width: 28%; height: 20px; }
-.mt-bow { left: calc(72% - 30px); top: 0; width: 60px; height: 60px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+.mt-bow { left: calc(72% - 23px); top: 17px; width: 46px; height: 62px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); transform-origin: 50% 20%; }
 .untie .mt-bow { animation: bow-off 420ms var(--ss-ease-soft) forwards; }
 .untie .mt-l { animation: thread-l 640ms var(--ss-ease-soft) 120ms forwards; }
 .untie .mt-r { animation: thread-r 640ms var(--ss-ease-soft) 120ms forwards; }
-.untie .cover-hint { opacity: 0; animation: none; }
-@keyframes bow-off { to { transform: scale(.3) rotate(50deg); opacity: 0; } }
+.untie.cover-book { --rx: 0deg; --ry: 0deg; }
+@keyframes bow-off { to { transform: translateY(14px) scale(.5) rotate(40deg); opacity: 0; } }
 @keyframes thread-l { to { transform: translate(-24%, 70px) rotate(8deg); opacity: 0; } }
 @keyframes thread-r { to { transform: translate(40%, 90px) rotate(-16deg); opacity: 0; } }
-/* ribbon bookmark: its tail hangs out below the closed book */
-.ribbon { position: absolute; right: 18%; bottom: -58px; width: 44px; height: 70px; display: flex; justify-content: center; text-decoration: none; z-index: 2; }
-.ribbon::before { content: ''; position: absolute; top: 0; bottom: 0; left: 10px; width: 24px; background: linear-gradient(90deg, #8E1F17, #BC3A2E 50%, #8E1F17);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 13px), 0 100%); }
-.rb-n { position: relative; margin-top: 20px; font-family: var(--ss-font-q); font-size: .85rem; font-weight: 600; color: #F3E2C0; }
+/* ribbon bookmark: haldi silk, its tail hanging out below the closed book */
+.ribbon { position: absolute; right: 16%; bottom: -60px; width: 44px; height: 72px; display: flex; justify-content: center; text-decoration: none; z-index: -1; filter: drop-shadow(0 3px 3px rgba(60,35,5,.3)); }
+.ribbon::before { content: ''; position: absolute; top: 0; bottom: 0; left: 10px; width: 24px;
+  background: linear-gradient(90deg, #B07915, #E9BB4E 45%, #F4D27F 55%, #B9821C);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 12px), 0 100%); }
+.rb-n { position: relative; margin-top: 24px; font-family: var(--ss-font-q); font-size: .85rem; font-weight: 600; color: #4A2C08; }
+
+/* ---- the collage on the desk ---- */
+.cover-collage { position: absolute; inset: 0; pointer-events: none; }
+.cl-petals { position: absolute; inset: 0; z-index: 0; }
+.cl-petal { position: absolute; width: 14px; height: 20px; opacity: .55; transform: rotate(var(--pr)) scale(var(--ps)); }
+.cl-petal svg { width: 100%; height: 100%; display: block; }
+.cl-tile { --k: 1; --px: 0px; --py: 0px; --rot: var(--r0, 0deg);
+  position: absolute; left: 0; top: 0; width: var(--s); padding: calc(var(--s) * .055) calc(var(--s) * .055) 0; border: 0; border-radius: 2px; cursor: pointer; pointer-events: auto;
+  background: #FBF7EE; color: var(--ss-ink-soft); font: inherit; text-align: center;
+  box-shadow: 0 1px 1px rgba(60,40,15,.18), 0 6px 14px -6px rgba(60,40,15,.45);
+  transform: translate(calc(var(--x) + var(--px)), calc(var(--y) + var(--py))) rotate(var(--rot)) scale(var(--k));
+  opacity: 0; transition: transform 520ms var(--ss-ease-settle), opacity 360ms var(--ss-ease-soft), filter 360ms var(--ss-ease-soft), box-shadow 360ms; transition-delay: 0ms; }
+/* arriving: the prints settle onto the desk one after another */
+.cover-collage:not(.in) .cl-tile { --k: 1.12; }
+.cover-collage.in .cl-tile { opacity: 1; }
+.cover-collage.in .cl-tile:not(.seen) { transition-delay: var(--d, 0ms); }
+.cl-img { position: relative; display: block; width: 100%; aspect-ratio: var(--ar, 1); overflow: hidden; background: #E9DFCB; }
+.cl-img img, .cl-img video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; filter: sepia(.1) saturate(.92) contrast(.98); transition: filter 360ms; }
+.cl-cap { display: block; height: calc(var(--s) * .16); padding: 0 6%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font-family: var(--ss-font-hand); font-style: italic; font-variation-settings: 'SOFT' 50, 'WONK' 0, 'opsz' 36; font-size: calc(var(--s) * .072); line-height: calc(var(--s) * .16);
+  opacity: 0; transition: opacity 300ms; }
+/* washi tape on some prints */
+.cl-tile.tape::before { content: ''; position: absolute; z-index: 2; top: calc(var(--s) * -.05); left: 50%; width: 38%; height: calc(var(--s) * .11);
+  transform: translateX(-50%) rotate(var(--tr, -4deg)); background: rgba(232,186,90,.55); box-shadow: 0 1px 1px rgba(0,0,0,.06);
+  -webkit-mask: linear-gradient(90deg, transparent 0 2px, #000 2px calc(100% - 2px), transparent 0); mask: linear-gradient(90deg, transparent 0 2px, #000 2px calc(100% - 2px), transparent 0); }
+.cl-tile:nth-child(3n).tape::before { background: rgba(179,39,29,.32); }
+.cl-tile:nth-child(3n+1).tape::before { background: rgba(94,125,79,.36); }
+/* video prints: a small play mark until it's playing */
+.cl-play, .cl-mute { position: absolute; z-index: 1; right: 6%; bottom: 6%; width: calc(var(--s) * .2); height: calc(var(--s) * .2); min-width: 22px; min-height: 22px; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(20,14,8,.55); color: #FBF7EE; transition: opacity 250ms, transform 250ms; }
+.cl-play svg, .cl-mute svg { width: 55%; height: 55%; }
+.cl-mute { opacity: 0; transform: scale(.8); }
+.cl-tile.playing .cl-play { opacity: 0; transform: scale(.7); }
+.cl-tile.muted .cl-mute { opacity: 1; transform: none; }
+.cl-tile.broken { display: none; }
+/* one print lifted: it comes out over the book, the rest step back */
+.cl-tile.on { --rot: calc(var(--r0, 0deg) * .15); z-index: 60 !important; transition-delay: 0ms !important;
+  box-shadow: 0 2px 3px rgba(60,40,15,.2), 0 26px 50px -16px rgba(40,25,8,.6); }
+.cl-tile.on .cl-cap { opacity: 1; }
+.cl-tile.on .cl-img img, .cl-tile.on .cl-img video { filter: none; }
+.cover-collage.has-active .cl-tile:not(.on) { opacity: .26; filter: saturate(.5) blur(.6px); transition-delay: 0ms; }
+.cover-collage.has-active .cl-petals { opacity: .4; transition: opacity 360ms; }
+.cover-screen.cover-collage-active .cover-book { filter: saturate(.85) brightness(.92); }
+.cl-tile:focus-visible { outline: 2px solid var(--ss-marigold); outline-offset: 4px; }
+.cl-tile.swapping { opacity: 0 !important; --k: .94; transition-delay: 0ms !important; }
+/* opening the book: the prints slide back a little and fade */
+.cover-screen.opening .cl-tile { opacity: 0; --k: .96; transition-delay: 0ms !important; transition-duration: 560ms; }
+.cover-screen.opening .cl-petals { opacity: 0; transition: opacity 500ms; }
+@media (hover: hover) and (pointer: fine) {
+  .cover-collage:not(.has-active) .cl-tile:hover { --k: 1.03; }
+}
 /* inside of the cover, seen while it swings open */
 .endpaper { background-color: #E6BE72 !important; background-image: radial-gradient(circle, rgba(168,38,28,.22) 1.6px, transparent 2.2px), radial-gradient(circle, rgba(94,125,79,.2) 1.2px, transparent 1.8px) !important;
   background-size: 16px 16px, 16px 16px !important; background-position: 0 0, 8px 8px !important; }
@@ -626,7 +718,7 @@ body.desk .grain { z-index: 3; opacity: .4; } /* the paper texture tile, over th
 .banner { position: fixed; top: 0; left: 0; right: 0; z-index: 90; background: var(--ss-sindoor); color: #fff; font-size: .95rem; padding: 6px 12px; text-align: center; }
 .banner a { color: #fff; }
 .has-banner .screen { padding-top: calc(64px + var(--safe-t)); }
-.has-banner .cover-menu { top: calc(62px + var(--safe-t)); }
+.has-banner .cover-menu { top: calc(50px + var(--safe-t)); }
 .notice { background: rgba(224,165,38,.16); border-radius: 12px; padding: 12px 14px; font-size: 1.1rem; margin: 12px 0; }
 
 /* ---- Reduced motion ---- */
@@ -688,7 +780,7 @@ body.less-motion.recording .diya.lit .diya-glow { animation: breathe 1.6s infini
 .bgm-toggle.is-muted { color: var(--ss-ink-faint); background: rgba(246,239,227,.7); }
 .bgm-toggle[aria-expanded="true"] { background: var(--ss-paper); box-shadow: 0 0 0 3px rgba(229,130,42,.35), 0 2px 8px rgba(42,32,24,.18); }
 .bgm-toggle:focus-visible { outline: 3px solid var(--ss-marigold); outline-offset: 2px; }
-body.has-banner .bgm-toggle { top: calc(env(safe-area-inset-top, 0px) + 52px); }
+.has-banner .bgm-toggle { top: calc(env(safe-area-inset-top, 0px) + 52px); }
 
 /* Volume panel (opens under the button) */
 .bgm-panel {
@@ -702,7 +794,7 @@ body.has-banner .bgm-toggle { top: calc(env(safe-area-inset-top, 0px) + 52px); }
   animation: bgm-pop var(--ss-d-quick) var(--ss-ease-settle) both;
 }
 .bgm-panel[hidden] { display: none; }
-body.has-banner .bgm-panel { top: calc(env(safe-area-inset-top, 0px) + 104px); }
+.has-banner .bgm-panel { top: calc(env(safe-area-inset-top, 0px) + 104px); }
 @keyframes bgm-pop { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
 .bgm-mute {
   flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0;

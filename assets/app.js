@@ -138,7 +138,10 @@
     let ducked = false, pruneTimer = 0;
     function applyLevel() {
       if (!el) return;
-      const target = ducked ? 0 : level;
+      // data-duck="soft" videos (cover collage) only dip the song; others silence it.
+      // Without a working volume (iOS, no gain node yet) a dip isn't possible: silence.
+      const soft = ducked && [...playingVideos].every((v) => v.dataset.duck === 'soft') && (volumeWorks || gain);
+      const target = ducked ? (soft ? level * 0.15 : 0) : level;
       el.muted = target === 0;
       if (gain) { el.volume = 1; gain.gain.value = target; }
       else el.volume = target;
@@ -148,7 +151,8 @@
       // the document, so drop anything detached/paused on every check
       playingVideos.forEach((v) => { if (!v.isConnected || v.paused || v.ended) playingVideos.delete(v); });
       const want = playingVideos.size > 0;
-      if (want !== ducked) { ducked = want; applyLevel(); }
+      if (want !== ducked) ducked = want;
+      applyLevel(); // the set may have changed even if ducked didn't (soft vs hard)
       clearInterval(pruneTimer);
       if (ducked) pruneTimer = setInterval(refreshDuck, 1000);
     }
@@ -1033,30 +1037,72 @@
     const lastPg = last && SS.findQuestion(last) ? BOOK.num('sawaal/' + last) : null;
     const shimmer = !sessionStorage.getItem('ss_foil') && !SS.reducedMotion();
     sessionStorage.setItem('ss_foil', '1');
-    render(`<main class="screen center bookscreen cover-screen">
+    // "Mamma ki Kahani" -> a small italic "Mamma ki" over a big "Kahani"
+    const words = t('book.coverTitle').trim().split(/\s+/);
+    const big = words.pop(), pre = words.join(' ');
+    // admin -> Collage media (already fetched at boot, so usually instant)
+    const cached = galleryCache.data ? UI.collageItems(galleryCache.data) : [];
+    render(`<main class="screen center bookscreen cover-screen ${cached.length ? 'has-collage' : ''}">
       <button class="iconbtn cover-menu" id="menu" aria-label="${esc(t('album.menu'))}">${MOTIF.menu()}</button>
       <div class="book cover-book">
         <button type="button" class="cover ${shimmer ? 'shimmer' : ''}" id="open" aria-label="${esc(t('book.openLabel'))}: ${esc(t('book.coverTitle'))}">
           <span class="spine" aria-hidden="true"></span>
           <span class="cloth" aria-hidden="true">
-            <span class="foil-frame"></span>
-            <span class="cover-motif">${MOTIF['rangoli-lotus']()}</span>
-            <span class="cover-title">${esc(t('book.coverTitle'))}</span>
+            ${MOTIF.arch()}
+            <span class="cv-inner">
+              <span class="cover-motif">${MOTIF['rangoli-lotus']()}</span>
+              ${pre ? `<span class="cv-pre">${esc(pre)}</span>` : ''}
+              <span class="cover-title">${esc(big)}</span>
+              <span class="cv-rule"><i></i><b></b><i></i></span>
+              <span class="cv-deva" lang="hi">${esc(t('book.coverDeva'))}</span>
+            </span>
             <span class="cover-sub">${esc(t('book.edition', { year: SS.bookYear() }))}</span>
           </span>
           ${MOTIF.mauliTie()}
+          <span class="cv-sheen" aria-hidden="true"></span>
         </button>
         ${lastPg ? `<a class="ribbon" id="ribbon" href="#/sawaal/${enc(last)}" aria-label="${esc(t('book.bookmark', { n: lastPg }))}"><span class="rb-n" aria-hidden="true">${lastPg}</span></a>` : ''}
       </div>
-    </main>`, 'desk');
+    </main>`, 'desk cover-desk');
+    const screen = $app.querySelector('.cover-screen');
     const book = $app.querySelector('.cover-book');
+    const mount = (items) => {
+      screen.classList.toggle('has-collage', items.length > 0);
+      UI.mountCollage(screen, book, items, onLeave);
+    };
+    if (galleryCache.data) mount(cached);
+    else fetchGallery().then((d) => { if (screen.isConnected) mount(UI.collageItems(d)); }).catch(() => { if (screen.isConnected) mount([]); });
+
+    // the birthday song: if she came straight here (skipped the reveal, reload),
+    // her first tap on this screen starts it. start() is a no-op once playing.
+    const kick = () => BGM.start();
+    document.addEventListener('pointerdown', kick, true);
+    document.addEventListener('keydown', kick, true);
+    onLeave(() => { document.removeEventListener('pointerdown', kick, true); document.removeEventListener('keydown', kick, true); });
+
+    // a little light follows the pointer across the cloth (mouse / pen only)
+    if (!SS.reducedMotion() && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      const cv = book.querySelector('.cover');
+      cv.addEventListener('pointermove', (e) => {
+        const r = cv.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+        book.style.setProperty('--ry', (x * 5).toFixed(2) + 'deg');
+        book.style.setProperty('--rx', (-y * 4).toFixed(2) + 'deg');
+        book.style.setProperty('--mx', ((x + 0.5) * 100).toFixed(1) + '%');
+        book.style.setProperty('--my', ((y + 0.5) * 100).toFixed(1) + '%');
+      });
+      cv.addEventListener('pointerleave', () => ['--rx', '--ry', '--mx', '--my'].forEach((k) => book.style.removeProperty(k)));
+    }
+
     let opening = false;
     const open = (to) => {
       if (opening) return;
       opening = true;
       SS.primeAudio(); // inside the tap, so the page sound may play
+      ['--rx', '--ry', '--mx', '--my'].forEach((k) => book.style.removeProperty(k));
       if (SS.reducedMotion()) return go(to);
       book.classList.add('untie');
+      screen.classList.add('opening');
       SS.vibrate(10);
       setTimeout(() => { if (lastRoute === 'kitaab') go(to); }, 720);
     };

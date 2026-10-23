@@ -415,6 +415,8 @@ const COPY = {
   "book.close": ["Close book"],
   "book.open": ["Kholne ke liye tap kijiye"],
   "book.openLabel": ["Kitaab kholiye"],
+  "book.coverDeva": ["मम्मा की कहानी"],
+  "collage.label": ["Yaadon ka collage", "यादों का कोलाज"],
   "book.edition": ["Janamdin · 23 October {{year}}", "जन्मदिन · 23 अक्टूबर {{year}}"],
   "book.from": ["Made with ❤️"],
   "book.pages": ["{{n}} panne"],

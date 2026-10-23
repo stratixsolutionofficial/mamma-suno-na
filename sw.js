@@ -1,8 +1,8 @@
 /* Mamma, Sunao Na · service worker
    Network-first for app files (so content.js edits show up), with a cache
    fallback so the book still opens when the net is slow or off. */
-const CACHE = 'sunao-v20';
-const CORE = ['./', './index.html', './content.js', './assets/styles.css', './assets/core.js', './assets/motifs.js', './assets/ui.js', './assets/app.js', './assets/icon.svg', './manifest.webmanifest'];
+const CACHE = 'sunao-v21';
+const CORE = ['./', './index.html', './content.js', './assets/styles.css', './assets/core.js', './assets/motifs.js', './assets/ui.js', './assets/collage.js', './assets/app.js', './assets/icon.svg', './manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));

@@ -100,12 +100,32 @@
   M.contents = () => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h9M4 12h9M4 18h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M15 6h1M18 6h2M15 12h1M18 12h2M15 18h1M18 18h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
   // closed book
   M.bookShut = () => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z M8 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 8h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
-  // mauli thread tied across the cover: two halves + a bow, so they can untie separately
+  // ---- Mauli tied across the cover: a twisted red-and-haldi thread
+  // (red core, alternating haldi / deep-red dashes = the twist), knotted,
+  // two frayed tassel ends hanging. Class names are what the untie animates.
+  const twist = (d, w) => `<path d="${d}" stroke="#4A0E0A" stroke-opacity=".35" stroke-width="${w + 1.6}" fill="none" vector-effect="non-scaling-stroke" transform="translate(0 1.2)"/>
+    <path d="${d}" stroke="#B3271D" stroke-width="${w}" fill="none" vector-effect="non-scaling-stroke"/>
+    <path d="${d}" stroke="#F0B43A" stroke-width="${w * 0.42}" stroke-dasharray="3.2 3.6" fill="none" vector-effect="non-scaling-stroke"/>
+    <path d="${d}" stroke="#7E1510" stroke-width="${w * 0.36}" stroke-dasharray="3.2 3.6" stroke-dashoffset="3.4" fill="none" vector-effect="non-scaling-stroke"/>
+    <path d="${d}" stroke="#FFE2A8" stroke-opacity=".35" stroke-width=".7" fill="none" vector-effect="non-scaling-stroke" transform="translate(0 -1)"/>`;
+  const fray = (x, y, dir) => [-5, -2, 1, 4].map((o) => `<path d="M${x} ${y} q${o * 0.4} 4 ${o + dir} 8" stroke="${o % 2 ? '#F0B43A' : '#B3271D'}" stroke-width="1.1" fill="none" stroke-linecap="round"/>`).join('');
   M.mauliTie = () => `<span class="mauli-tie" aria-hidden="true">
-    <svg class="mt-l" viewBox="0 0 200 20" preserveAspectRatio="none"><path d="M0 10 C30 4 60 16 100 9 C140 3 170 15 200 10" stroke="#A8261C" stroke-width="3.2" fill="none"/><path d="M0 12 C30 6 60 18 100 11 C140 5 170 17 200 12" stroke="#E0A526" stroke-width="1.4" fill="none"/></svg>
-    <svg class="mt-r" viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M0 10 C30 4 60 16 100 9" stroke="#A8261C" stroke-width="3.2" fill="none"/><path d="M0 12 C30 6 60 18 100 11" stroke="#E0A526" stroke-width="1.4" fill="none"/></svg>
-    <svg class="mt-bow" viewBox="0 0 60 60"><path d="M30 30 C14 14 4 20 8 30 C4 40 14 46 30 30Z M30 30 C46 14 56 20 52 30 C56 40 46 46 30 30Z" fill="#A8261C"/><path d="M30 30 C26 42 22 50 16 58 M30 30 C34 42 40 50 46 58" stroke="#A8261C" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M30 30 C18 20 10 24 12 30" stroke="#E0A526" stroke-width="1.2" fill="none"/><circle cx="30" cy="30" r="4.5" fill="#E0A526"/></svg>
+    <svg class="mt-l" viewBox="0 0 200 20" preserveAspectRatio="none">${twist('M-2 9 C40 13 90 13 140 11 C170 10 190 9 202 9.5', 3.6)}</svg>
+    <svg class="mt-r" viewBox="0 0 100 20" preserveAspectRatio="none">${twist('M-2 9.5 C30 10 70 11 102 8.5', 3.6)}</svg>
+    <svg class="mt-bow" viewBox="0 0 60 80">
+      <g stroke-linecap="round">${twist('M28 16 C26 30 20 44 17 64', 3)}${twist('M32 16 C34 32 40 46 44 68', 3)}</g>
+      ${fray(17, 64, -1)}${fray(44, 68, 1)}
+      <ellipse cx="30" cy="16" rx="9" ry="6.5" fill="#B3271D"/>
+      <path d="M22 13 C26 19 34 19 38 13 M21.5 17 C26 23 34 23 38.5 17" stroke="#F0B43A" stroke-width="1.3" fill="none"/>
+      <path d="M24 11 C28 9 33 9 36 11" stroke="#FFE2A8" stroke-opacity=".5" stroke-width="1" fill="none"/>
+    </svg>
   </span>`;
+  // the jharokha arch on the cover (stretched to its box; strokes stay crisp)
+  M.arch = () => `<svg class="cv-arch" viewBox="0 0 150 200" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path d="M11 196 V78 C11 50 44 36 75 12 C106 36 139 50 139 78 V196 Z" fill="rgba(4,24,23,.26)" stroke="none"/>
+    <path d="M4 200 V74 C4 44 40 28 75 3 C110 28 146 44 146 74 V200" fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
+    <path d="M11 196 V78 C11 50 44 36 75 12 C106 36 139 50 139 78 V196 Z" fill="none" stroke="currentColor" stroke-opacity=".55" stroke-width=".8" vector-effect="non-scaling-stroke"/>
+  </svg>`;
   M.menu = () => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
   M.mic = () => `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
   M.pen = () => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L5 15 L16 4 L20 8 L9 19Z M14 6 L18 10" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>`;
