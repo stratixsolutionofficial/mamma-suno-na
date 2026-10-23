@@ -198,7 +198,12 @@
       ensureButton();
       show();
     }
-    function show() { ensureButton(); btn.hidden = false; paintButton(); }
+    function show() {
+      ensureButton();
+      btn.hidden = false;
+      document.body.classList.add('has-bgm');
+      paintButton();
+    }
     // keep playing when tab regains focus (autoplay already unlocked by then)
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
