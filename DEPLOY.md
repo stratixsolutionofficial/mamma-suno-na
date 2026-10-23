@@ -60,8 +60,9 @@ The panel has three things:
 1. **Collage · Photos & Videos** — drop/pick photos (shown in the app at
    `…/#/tasveerein`) and videos/recordings (shown at `…/#/aawaazein`). Add a
    caption per item, Save, or Delete.
-2. **Greeting video** — upload one birthday greeting video. Uploading a new one
-   replaces the old. It appears in the app's greetings page (`…/#/shubhkamnayein`).
+2. **Greeting videos** — upload any number of birthday greeting videos (multi-select
+   or drop several). Each gets a caption, Save and Delete. They appear in the app's
+   greetings page (`…/#/shubhkamnayein`) in upload order.
 3. **Questions** — edit the text shown to Mamma, or turn a question off. Saved to
    the cloud and picked up by the app automatically; `content.js` stays the
    fallback. "Reset to original" clears all edits.
@@ -78,8 +79,9 @@ Layout in Blob:
 <space>/media/videos/<id>.<mp4|webm|mov|m4a|…> a collage video / recording
 <space>/media/videos/<id>.json                 { caption, order, … }
 <space>/config/questions.json                  { "<question.key>": { prompt?, sub?, enabled? } }
-<space>/config/greeting-video.<mp4|webm|mov|m4v>  the greeting video
-<space>/config/greeting-video.json             { caption }
+<space>/media/greetings/<id>.<mp4|webm|mov|m4v> a greeting video (any number)
+<space>/media/greetings/<id>.json              { caption, order }
+<space>/config/greeting-video.<ext>             older single greeting video (still shown; delete from admin)
 ```
 
 Each media upload is capped at 200 MB (fine for a short phone video). Longer

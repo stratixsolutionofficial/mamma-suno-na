@@ -94,12 +94,13 @@
       </section>
 
       <section id="greeting"><h2>Greeting video</h2>
-        <p class="muted">One greeting video for the birthday. Uploading a new one replaces the old. It appears in the app's greetings section.</p>
-        <div class="drop" id="gdrop">Drop the greeting video here, or choose
-          <div style="margin-top:8px"><input type="file" id="gfile" accept="video/*"></div>
+        <p class="muted">Birthday greeting videos, as many as you like. Choose several at once (⌘/Shift-click) or drop them here. They appear in the app's greetings section (<code>#/shubhkamnayein</code>) in this order. Add who it's from as the caption.</p>
+        <div class="drop" id="gdrop">Drop greeting videos here, or choose
+          <div style="margin-top:8px"><input type="file" id="gfile" accept="video/*" multiple></div>
         </div>
         <div class="prog" id="gprog" hidden><i></i></div>
-        <div id="gcur"></div>
+        <span class="copied" id="gmsg" role="status"></span>
+        <div class="mgrid" id="ggrid"></div>
       </section>
 
       <section id="questions"><h2>Questions</h2>
@@ -153,6 +154,8 @@
         method: 'POST', headers: { 'content-type': contentType || 'application/octet-stream', 'x-admin-key': KEY }, body
       });
       if (res.status === 401) throw new Error('Admin key is incorrect.');
+      // 400 = the server doesn't accept this folder: it's running old code (restart / redeploy)
+      if (res.status === 400) throw new Error('server rejected the path (400). Restart the dev server or redeploy so it has the latest api code.');
       if (!res.ok) throw new Error('Upload failed (' + res.status + ')');
       return res.json();
     }
@@ -188,11 +191,12 @@
     }
 
     // ---------------- Collage media ----------------
-    const say = (txt, bad) => { const el = $('#mmsg'); el.textContent = txt; el.style.color = bad ? 'var(--sin)' : 'var(--leaf)'; };
-    const photoPath = (id, ext) => `${SPACE}/media/photos/${id}.${ext}`;
-    const photoMeta = (id) => `${SPACE}/media/photos/${id}.json`;
-    const videoPath = (id, ext) => `${SPACE}/media/videos/${id}.${ext}`;
-    const videoMeta = (id) => `${SPACE}/media/videos/${id}.json`;
+    // status line: greeting uploads report inside the Greeting section, the rest in Collage
+    const say = (txt, bad, where) => { const el = $(where || '#mmsg'); el.textContent = txt; el.style.color = bad ? 'var(--sin)' : 'var(--leaf)'; };
+    // kind -> blob folder ('photo' | 'video' | 'greeting')
+    const FOLDER = { photo: 'photos', video: 'videos', greeting: 'greetings' };
+    const mediaPath = (kind, id, ext) => `${SPACE}/media/${FOLDER[kind]}/${id}.${ext}`;
+    const metaPath = (kind, id) => `${SPACE}/media/${FOLDER[kind]}/${id}.json`;
 
     function cardHTML(kind, it) {
       const isVid = VID_EXT.includes(it.ext);
@@ -216,13 +220,13 @@
         st.textContent = 'saving…';
         const prevOrder = el.dataset.order !== '' ? Number(el.dataset.order) : Date.now();
         const meta = { caption: el.querySelector('.cap').value.trim(), order: prevOrder, updatedAt: Date.now() };
-        try { await apiPut(kind === 'photo' ? photoMeta(id) : videoMeta(id), JSON.stringify(meta), 'application/json'); el.dataset.order = String(prevOrder); st.textContent = 'saved'; }
+        try { await apiPut(metaPath(kind, id), JSON.stringify(meta), 'application/json'); el.dataset.order = String(prevOrder); st.textContent = 'saved'; }
         catch (e) { st.textContent = e.message; }
       });
       el.querySelector('.del').addEventListener('click', async () => {
         if (!confirm('Delete for sure?')) return;
         st.textContent = 'deleting…';
-        try { await apiDelete(kind === 'photo' ? photoPath(id, ext) : videoPath(id, ext)); await apiDelete(kind === 'photo' ? photoMeta(id) : videoMeta(id)).catch(() => {}); el.remove(); }
+        try { await apiDelete(mediaPath(kind, id, ext)); await apiDelete(metaPath(kind, id)).catch(() => {}); el.remove(); }
         catch (e) { st.textContent = e.message; }
       });
     }
@@ -234,32 +238,39 @@
       vg.querySelectorAll('.mcard').forEach(wireCard);
     }
     async function refreshGallery() {
-      try { const data = await loadGallery(); renderGallery(data); renderGreeting(data.config && data.config.greetingVideo); }
+      try { const data = await loadGallery(); renderGallery(data); renderGreetings(data.greetings || [], data.config && data.config.greetingVideo); }
       catch (e) { say(e.message, true); }
     }
     async function uploadFiles(files, kind) {
-      const prog = $(kind === 'photo' ? '#pprog' : '#vprog');
+      const prog = $(kind === 'photo' ? '#pprog' : kind === 'greeting' ? '#gprog' : '#vprog');
       const bar = prog.querySelector('i'); prog.hidden = false; bar.style.width = '0';
       const list = [...files];
+      const where = kind === 'greeting' ? '#gmsg' : '#mmsg';
+      const failed = [];
       for (let i = 0; i < list.length; i++) {
         const f = list[i];
         const ext = extOf(f.name, f.type);
         const okPhoto = IMG_EXT.includes(ext), okVideo = VID_EXT.includes(ext) || AUD_EXT.includes(ext);
-        if (kind === 'photo' && !okPhoto) { say(f.name + ': not a photo', true); continue; }
-        if (kind === 'video' && !okVideo) { say(f.name + ': not a video/audio', true); continue; }
+        if ((kind === 'photo' && !okPhoto) || (kind === 'video' && !okVideo) || (kind === 'greeting' && !VID_EXT.includes(ext))) {
+          failed.push(f.name + ': ' + (kind === 'photo' ? 'not a photo' : kind === 'video' ? 'not a video/audio' : 'not a video'));
+          continue;
+        }
         const useExt = (kind === 'video' && ext === 'bin') ? 'm4a' : ext;
         const id = slug(f.name.replace(/\.[^.]+$/, '')) + '-' + Date.now().toString(36) + '-' + i;
-        const path = kind === 'photo' ? photoPath(id, useExt) : videoPath(id, useExt);
-        say('Uploading ' + (i + 1) + '/' + list.length + ' — ' + f.name);
+        const path = mediaPath(kind, id, useExt);
+        say('Uploading ' + (i + 1) + '/' + list.length + ' — ' + f.name, false, where);
         try {
           await apiPut(path, f, f.type);
           const cap = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
-          await apiPut(kind === 'photo' ? photoMeta(id) : videoMeta(id), JSON.stringify({ caption: cap, order: Date.now(), updatedAt: Date.now() }), 'application/json').catch(() => {});
-        } catch (e) { say(f.name + ': ' + e.message, true); }
+          // order = upload time (+i keeps a multi-select in the picked order)
+          await apiPut(metaPath(kind, id), JSON.stringify({ caption: cap, order: Date.now() + i, updatedAt: Date.now() }), 'application/json').catch(() => {});
+        } catch (e) { failed.push(f.name + ': ' + e.message); }
         bar.style.width = Math.round(((i + 1) / list.length) * 100) + '%';
       }
       setTimeout(() => (prog.hidden = true), 600);
-      say('Upload complete'); refreshGallery();
+      if (failed.length) say(`${list.length - failed.length}/${list.length} uploaded. Failed: ${failed.join(' · ')}`, true, where);
+      else say(list.length + ' uploaded', false, where);
+      refreshGallery();
     }
     function initCollage() {
       $('#pfile').addEventListener('change', (e) => uploadFiles(e.target.files, 'photo'));
@@ -276,39 +287,33 @@
     // ---------------- Greeting video ----------------
     const greetPath = (ext) => `${SPACE}/config/greeting-video.${ext}`;
     const greetMeta = () => `${SPACE}/config/greeting-video.json`;
-    function renderGreeting(gv) {
-      const box = $('#gcur');
-      if (!gv || !gv.url) { box.innerHTML = '<p class="muted">No greeting video yet.</p>'; return; }
-      box.innerHTML = `<div class="mcard" style="max-width:320px;margin-top:12px">
-        <video class="thumb" src="${esc(gv.url)}" controls preload="metadata" style="aspect-ratio:16/10"></video>
-        <div class="body"><div class="mrow"><span class="st"></span><button class="del">Delete</button></div></div>
-      </div>`;
-      box.querySelector('.del').addEventListener('click', async () => {
-        if (!confirm('Delete the greeting video?')) return;
-        try { await apiDelete(greetPath(gv.ext)); await apiDelete(greetMeta()).catch(() => {}); renderGreeting(null); }
-        catch (e) { box.querySelector('.st').textContent = e.message; }
-      });
-    }
-    async function uploadGreeting(file) {
-      const ext = extOf(file.name, file.type);
-      if (!VID_EXT.includes(ext)) { say('Greeting must be a video', true); return; }
-      const prog = $('#gprog'), bar = prog.querySelector('i'); prog.hidden = false; bar.style.width = '30%';
-      try {
-        // remove any previous greeting of a different extension so only one remains
-        for (const old of VID_EXT) { if (old !== ext) await apiDelete(greetPath(old)).catch(() => {}); }
-        await apiPut(greetPath(ext), file, file.type); bar.style.width = '80%';
-        await apiPut(greetMeta(), JSON.stringify({ caption: file.name.replace(/\.[^.]+$/, ''), updatedAt: Date.now() }), 'application/json').catch(() => {});
-        bar.style.width = '100%'; say('Greeting video uploaded');
-      } catch (e) { say(e.message, true); }
-      setTimeout(() => (prog.hidden = true), 600);
-      refreshGallery();
+    function renderGreetings(list, legacy) {
+      const box = $('#ggrid');
+      box.innerHTML = list.map((it) => cardHTML('greeting', it)).join('');
+      box.querySelectorAll('.mcard').forEach(wireCard);
+      // the old single greeting video (config/greeting-video.*) still shows in
+      // the app; list it here so it can be deleted once re-uploaded above
+      if (legacy && legacy.url) {
+        box.insertAdjacentHTML('beforeend', `<div class="mcard" id="glegacy">
+          <video class="thumb" src="${esc(legacy.url)}" controls preload="metadata"></video>
+          <div class="body"><div class="muted" style="font-size:12px;margin-bottom:6px">Older single greeting${legacy.caption ? ': ' + esc(legacy.caption) : ''}</div>
+            <div class="mrow"><span class="st"></span><button class="del">Delete</button></div></div>
+        </div>`);
+        const el = $('#glegacy');
+        el.querySelector('.del').addEventListener('click', async () => {
+          if (!confirm('Delete this greeting video?')) return;
+          try { await apiDelete(greetPath(legacy.ext)); await apiDelete(greetMeta()).catch(() => {}); el.remove(); }
+          catch (e) { el.querySelector('.st').textContent = e.message; }
+        });
+      }
+      if (!box.children.length) box.innerHTML = '<p class="muted">No greeting videos yet.</p>';
     }
     function initGreeting() {
-      $('#gfile').addEventListener('change', (e) => { if (e.target.files[0]) uploadGreeting(e.target.files[0]); });
+      $('#gfile').addEventListener('change', (e) => { if (e.target.files.length) uploadFiles(e.target.files, 'greeting'); e.target.value = ''; });
       const d = $('#gdrop');
       ['dragenter', 'dragover'].forEach((ev) => d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.add('over'); }));
       ['dragleave', 'drop'].forEach((ev) => d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.remove('over'); }));
-      d.addEventListener('drop', (e) => { if (e.dataTransfer.files[0]) uploadGreeting(e.dataTransfer.files[0]); });
+      d.addEventListener('drop', (e) => { if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files, 'greeting'); });
     }
 
     // ---------------- Questions editor ----------------

@@ -38,7 +38,7 @@ const MIME = {
 
 // Same path rules as api/upload.js
 const SAFE_APP = /^[A-Za-z0-9][A-Za-z0-9._-]*\/(answers\/[A-Za-z0-9._-]+\.json|audio\/[A-Za-z0-9._-]+\.(webm|m4a))$/;
-const SAFE_MEDIA = /^[A-Za-z0-9][A-Za-z0-9._-]*\/(media\/(photos\/[A-Za-z0-9._-]+\.(jpe?g|png|webp|gif|json)|videos\/[A-Za-z0-9._-]+\.(mp4|webm|mov|m4v|m4a|mp3|ogg|wav|aac|json))|config\/(questions\.json|greeting-video\.(mp4|webm|mov|m4v|json)))$/i;
+const SAFE_MEDIA = /^[A-Za-z0-9][A-Za-z0-9._-]*\/(media\/(photos\/[A-Za-z0-9._-]+\.(jpe?g|png|webp|gif|json)|videos\/[A-Za-z0-9._-]+\.(mp4|webm|mov|m4v|m4a|mp3|ogg|wav|aac|json)|greetings\/[A-Za-z0-9._-]+\.(mp4|webm|mov|m4v|json))|config\/(questions\.json|greeting-video\.(mp4|webm|mov|m4v|json)))$/i;
 const SAFE_SPACE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 function adminOk(given) {
@@ -117,8 +117,8 @@ async function readConfig(space) {
 async function apiGallery(req, res, url) {
   const space = url.searchParams.get('space') || '';
   if (!SAFE_SPACE.test(space)) return json(res, 400, { error: 'bad space' });
-  const [photos, videos, config] = await Promise.all([listPrefix(`${space}/media/photos/`), listPrefix(`${space}/media/videos/`), readConfig(space)]);
-  return json(res, 200, { space, photos, videos, config });
+  const [photos, videos, greetings, config] = await Promise.all([listPrefix(`${space}/media/photos/`), listPrefix(`${space}/media/videos/`), listPrefix(`${space}/media/greetings/`), readConfig(space)]);
+  return json(res, 200, { space, photos, videos, greetings, config });
 }
 
 // ---- api/admin-check (POST, admin) ----

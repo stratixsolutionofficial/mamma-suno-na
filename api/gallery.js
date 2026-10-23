@@ -11,6 +11,8 @@
 //   <space>/media/photos/<id>.json       { caption, order, by, ... }  (optional)
 //   <space>/media/videos/<id>.<ext>      the video / audio recording
 //   <space>/media/videos/<id>.json       { caption, order, by, poster, ... } (optional)
+//   <space>/media/greetings/<id>.<ext>   a birthday greeting video (any number)
+//   <space>/media/greetings/<id>.json    { caption, order } (optional)
 
 import { list } from '@vercel/blob';
 
@@ -97,13 +99,14 @@ export default async function handler(req, res) {
   if (!SAFE_SPACE.test(space)) return res.status(400).json({ error: 'bad space' });
 
   try {
-    const [photos, videos, config] = await Promise.all([
+    const [photos, videos, greetings, config] = await Promise.all([
       collect(space + '/media/photos/'),
       collect(space + '/media/videos/'),
+      collect(space + '/media/greetings/'),
       readConfig(space)
     ]);
     res.setHeader('cache-control', 'no-store');
-    return res.status(200).json({ space, photos, videos, config });
+    return res.status(200).json({ space, photos, videos, greetings, config });
   } catch (e) {
     return res.status(500).json({ error: String((e && e.message) || e) });
   }

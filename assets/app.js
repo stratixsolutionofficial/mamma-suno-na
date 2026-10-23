@@ -22,8 +22,9 @@
   let cleanup = [];
   const onLeave = (fn) => cleanup.push(fn);
   let lastRoute = '';
-  // Greeting video uploaded from admin (filled at boot from /api/gallery config).
-  let GREETING_VIDEO = null;
+  // Greeting videos uploaded from admin (filled at boot from /api/gallery):
+  // [{ url, caption }] — the many-video list, plus the older single one if present.
+  let GREETING_VIDEOS = [];
 
   // ------------------------------------------------------------------
   // Background music (birthday song) — lives OUTSIDE the route lifecycle so it
@@ -57,8 +58,43 @@
     }
     function setMuted(m) {
       SS.ls.set('bgmMuted', m);
-      if (el) { el.muted = m; if (!m && el.paused && started) el.play().catch(() => {}); }
+      if (el) { applyLevel(); if (!m && el.paused && started) el.play().catch(() => {}); }
       paintButton();
+    }
+
+    // ---- Duck under videos ----
+    // While any <video> (greeting video, collage/gallery, greeting wall) is
+    // playing, the song goes silent so the video's sound can be heard, then
+    // comes back when it pauses/ends. Uses `muted` as well as volume because
+    // iOS Safari ignores element.volume. Her own mute choice is untouched.
+    const playingVideos = new Set();
+    let ducked = false, pruneTimer = 0;
+    function applyLevel() {
+      if (!el) return;
+      el.muted = isMuted() || ducked;
+      el.volume = ducked ? 0 : 1;
+    }
+    function refreshDuck() {
+      // a video removed from the page while playing never reports 'pause' to
+      // the document, so drop anything detached/paused on every check
+      playingVideos.forEach((v) => { if (!v.isConnected || v.paused || v.ended) playingVideos.delete(v); });
+      const want = playingVideos.size > 0;
+      if (want !== ducked) { ducked = want; applyLevel(); }
+      clearInterval(pruneTimer);
+      if (ducked) pruneTimer = setInterval(refreshDuck, 1000);
+    }
+    if (typeof document !== 'undefined') {
+      // media events don't bubble, so listen in the capture phase
+      const onVideo = (e) => {
+        const v = e.target;
+        if (!(v instanceof HTMLVideoElement)) return;
+        if (e.type === 'playing' || e.type === 'play') { if (!v.muted) playingVideos.add(v); }
+        else if (e.type === 'volumechange') { if (v.muted) playingVideos.delete(v); else if (!v.paused) playingVideos.add(v); }
+        else playingVideos.delete(v);
+        refreshDuck();
+      };
+      ['play', 'playing', 'pause', 'ended', 'emptied', 'volumechange'].forEach((t) => document.addEventListener(t, onVideo, true));
+      window.addEventListener('hashchange', () => setTimeout(refreshDuck, 0));
     }
     function start() {
       const c = cfg();
@@ -69,7 +105,7 @@
         el = new Audio(c.src);
         el.loop = true;              // keep the moment going in the background
         el.preload = 'auto';
-        el.muted = isMuted();
+        applyLevel();
         // Seek to the start offset as soon as we can (before and after metadata).
         const seek = () => { try { if (el.currentTime < startAt) el.currentTime = startAt; } catch (e) { /* */ } };
         el.addEventListener('loadedmetadata', seek, { once: true });
@@ -749,9 +785,7 @@
   // ------------------------------------------------------------------
   function wall() {
     const list = UI.greetings('wall');
-    const gv = GREETING_VIDEO && GREETING_VIDEO.url
-      ? `<figure class="greet-video"><video src="${esc(GREETING_VIDEO.url)}" controls playsinline preload="metadata"></video>${GREETING_VIDEO.caption ? `<figcaption class="hand">${esc(GREETING_VIDEO.caption)}</figcaption>` : ''}</figure>`
-      : '';
+    const gv = GREETING_VIDEOS.map((g) => `<figure class="greet-video"><video src="${esc(g.url)}" controls playsinline preload="metadata"${g.caption ? ` aria-label="${esc(g.caption)}"` : ''}></video>${g.caption ? `<figcaption class="hand">${esc(g.caption)}</figcaption>` : ''}</figure>`).join('');
     render(`<main class="screen">
       <div class="topbar"><a class="iconbtn" href="#/kitaab" aria-label="${esc(t('chapter.back'))}">${MOTIF.back()}</a><span class="label"></span></div>
       <div class="wall-title"><h1 class="big-title">${esc(t('wall.title'))}</h1></div>
@@ -1677,8 +1711,9 @@
       const data = await fetchGallery(true);
       if (data && data.config) {
         SS.applyQuestionOverrides(data.config.questions);
-        if (data.config.greetingVideo) GREETING_VIDEO = data.config.greetingVideo;
+        if (data.config.greetingVideo) GREETING_VIDEOS.push(data.config.greetingVideo);
       }
+      if (data && Array.isArray(data.greetings)) GREETING_VIDEOS.push(...data.greetings.filter((g) => g && g.url));
     } catch (e) { /* offline or no backend: use content.js as-is */ }
     SS.backup.kick(); // push anything that didn't make it up last time
     route();
