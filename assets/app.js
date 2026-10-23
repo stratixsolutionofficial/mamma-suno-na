@@ -785,7 +785,28 @@
   // ------------------------------------------------------------------
   function wall() {
     const list = UI.greetings('wall');
-    const gv = GREETING_VIDEOS.map((g) => `<figure class="greet-video"><video src="${esc(g.url)}" controls playsinline preload="metadata"${g.caption ? ` aria-label="${esc(g.caption)}"` : ''}></video>${g.caption ? `<figcaption class="hand">${esc(g.caption)}</figcaption>` : ''}</figure>`).join('');
+    // Video greetings as a swipeable reel: one framed video at a time, the
+    // neighbours peeking in at the sides. No captions (they were file names).
+    const N = GREETING_VIDEOS.length;
+    const gv = N ? `<section class="reel" aria-roledescription="carousel" aria-label="${esc(t('wall.reel'))}">
+        <div class="reel-stage">
+        <div class="reel-track" tabindex="0">
+          ${GREETING_VIDEOS.map((g, i) => `<div class="reel-slide" role="group" aria-roledescription="slide" aria-label="${i + 1} / ${N}" data-i="${i}">
+            <div class="reel-frame">
+              <video src="${esc(g.url)}#t=0.1" playsinline preload="metadata" aria-label="${esc(t('wall.reel'))} ${i + 1}"></video>
+              <button type="button" class="reel-play" aria-label="${esc(t('wall.reel.play'))} ${i + 1}">${MOTIF.play()}</button>
+            </div>
+          </div>`).join('')}
+        </div>
+        ${N > 1 ? `
+        <button type="button" class="reel-btn reel-prev" data-step="-1" aria-label="${esc(t('book.prev'))}">${MOTIF.back()}</button>
+        <button type="button" class="reel-btn reel-next" data-step="1" aria-label="${esc(t('book.next'))}">${MOTIF.fwd()}</button>
+        </div>
+        <div class="reel-nav">
+          <div class="reel-dots" role="tablist">${GREETING_VIDEOS.map((_, i) => `<button type="button" role="tab" class="reel-dot" data-go="${i}" aria-label="${i + 1} / ${N}"></button>`).join('')}</div>
+        </div>
+        <p class="reel-count" aria-live="polite"></p>` : '</div>'}
+      </section>` : '';
     render(`<main class="screen">
       <div class="topbar"><a class="iconbtn" href="#/kitaab" aria-label="${esc(t('chapter.back'))}">${MOTIF.back()}</a><span class="label"></span></div>
       <div class="wall-title"><h1 class="big-title">${esc(t('wall.title'))}</h1></div>
@@ -798,6 +819,88 @@
     UI.wirePlay($app);
     // only one video at a time too
     $app.querySelectorAll('video').forEach((v) => v.addEventListener('play', () => { SS.player.stop(); $app.querySelectorAll('video').forEach((o) => o !== v && o.pause()); }));
+    wireReel($app.querySelector('.reel'));
+  }
+  // Reel behaviour: snap scrolling, arrows/dots/keys, tap-to-play, pause what
+  // slides away, and roll on to the next greeting when one finishes.
+  function wireReel(reel) {
+    if (!reel) return;
+    const track = reel.querySelector('.reel-track');
+    const slides = [...reel.querySelectorAll('.reel-slide')];
+    const dots = [...reel.querySelectorAll('.reel-dot')];
+    const count = reel.querySelector('.reel-count');
+    const smooth = SS.reducedMotion() ? 'auto' : 'smooth';
+    // `cur` is the source of truth. Buttons/dots/keys change it immediately
+    // (so rapid clicks always count); the scroll position just follows. While
+    // a button-driven scroll is animating we ignore scroll events, otherwise
+    // the half-way position would drag `cur` back and the next click is lost.
+    let cur = -1, auto = false, autoTimer = 0;
+    const vid = (i) => slides[i] && slides[i].querySelector('video');
+    const leftFor = (i) => slides[i].offsetLeft - (track.clientWidth - slides[i].clientWidth) / 2;
+    const endAuto = () => { auto = false; clearTimeout(autoTimer); };
+    const setCur = (i) => {
+      if (i === cur) return;
+      cur = i;
+      slides.forEach((s, k) => s.classList.toggle('on', k === i));
+      dots.forEach((d, k) => d.setAttribute('aria-selected', k === i ? 'true' : 'false'));
+      reel.querySelectorAll('.reel-btn').forEach((b) => { b.disabled = (+b.dataset.step < 0 && i === 0) || (+b.dataset.step > 0 && i === slides.length - 1); });
+      if (count) count.textContent = `${i + 1} / ${slides.length}`;
+      // anything that has slid away stops talking
+      slides.forEach((s, k) => { if (k !== i) { const v = vid(k); if (!v.paused) v.pause(); } });
+    };
+    const goTo = (i, play) => {
+      i = Math.max(0, Math.min(slides.length - 1, i));
+      setCur(i);
+      auto = true;
+      clearTimeout(autoTimer);
+      autoTimer = setTimeout(endAuto, 900); // fallback where 'scrollend' isn't supported
+      track.scrollTo({ left: leftFor(i), behavior: smooth });
+      if (play) vid(i).play().catch(() => {}); // may be blocked without a tap; the play button stays
+    };
+    // swipes: which slide is centred (nearest centre, once per frame)
+    let raf = 0;
+    const nearest = () => {
+      const mid = track.scrollLeft + track.clientWidth / 2;
+      let best = 0, bd = Infinity;
+      slides.forEach((s, k) => { const d = Math.abs(s.offsetLeft + s.clientWidth / 2 - mid); if (d < bd) { bd = d; best = k; } });
+      return best;
+    };
+    track.addEventListener('scroll', () => {
+      if (auto) { clearTimeout(autoTimer); autoTimer = setTimeout(endAuto, 150); return; }
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setCur(nearest()));
+    }, { passive: true });
+    track.addEventListener('scrollend', endAuto);
+    // a finger on the track always wins over a running button scroll
+    track.addEventListener('pointerdown', endAuto, { passive: true });
+    track.addEventListener('wheel', endAuto, { passive: true });
+    reel.querySelectorAll('.reel-btn').forEach((b) => b.addEventListener('click', () => goTo(cur + +b.dataset.step)));
+    dots.forEach((d) => d.addEventListener('click', () => goTo(+d.dataset.go)));
+    // ← / → anywhere on this page (not while typing or using a video's own controls)
+    const onKey = (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || !reel.isConnected) return;
+      const a = document.activeElement;
+      if (a && (/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName) || (a.tagName === 'VIDEO' && a.controls))) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); goTo(cur + 1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(cur - 1); }
+    };
+    document.addEventListener('keydown', onKey);
+    onLeave(() => document.removeEventListener('keydown', onKey));
+    // keep the current slide centred if the window is resized / rotated
+    const onResize = () => track.scrollTo({ left: leftFor(cur), behavior: 'auto' });
+    window.addEventListener('resize', onResize);
+    onLeave(() => window.removeEventListener('resize', onResize));
+    slides.forEach((s, k) => {
+      const v = vid(k), btn = s.querySelector('.reel-play');
+      // tapping a side slide brings it to the centre; tapping the centre one plays
+      btn.addEventListener('click', () => { if (k !== cur) goTo(k); else v.play().catch(() => {}); });
+      s.addEventListener('click', (e) => { if (k !== cur && !e.target.closest('.reel-play')) { e.preventDefault(); goTo(k); } });
+      // once started, hand over to the native controls (pause, scrub, fullscreen)
+      v.addEventListener('play', () => { s.classList.add('started', 'playing'); v.controls = true; if (k !== cur) goTo(k); });
+      v.addEventListener('pause', () => s.classList.remove('playing'));
+      v.addEventListener('ended', () => { s.classList.remove('playing'); if (k < slides.length - 1 && k === cur) setTimeout(() => { if (cur === k) goTo(k + 1, true); }, 700); });
+    });
+    setCur(0);
   }
 
   // ------------------------------------------------------------------
@@ -1086,7 +1189,7 @@
       <button class="opt" data-go="#/kitaab">${esc(t('menu.book'))}</button>
       <button class="opt" data-share>${esc(t('menu.share'))}</button>
       <label class="toggle">${esc(t('menu.lessMotion'))}<input type="checkbox" data-motion ${SS.ls.get('lessMotion', false) ? 'checked' : ''}></label>
-      <label class="toggle">${esc(t('menu.pageSound'))}<input type="checkbox" data-sound ${SS.ls.get('pageSound', false) ? 'checked' : ''}></label>
+      <label class="toggle">${esc(t('menu.pageSound'))}<input type="checkbox" data-sound ${SS.pageSoundOn() ? 'checked' : ''}></label>
       <label class="toggle"><span>${esc(COPY['menu.hindi'][0])} <span class="faint">(${esc(COPY['menu.hindi'][1])})</span></span><input type="checkbox" data-hindi ${SS.lang() === 'hindi' ? 'checked' : ''}></label>
       ${phone ? `<a class="opt" href="tel:${esc(phone)}">${esc(t('menu.help'))}</a>` : ''}
       <button class="btn ghost" data-close style="margin-top:6px">${esc(t('menu.close'))}</button>`, { label: 'Menu' });

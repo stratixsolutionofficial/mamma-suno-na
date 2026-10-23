@@ -291,10 +291,11 @@
     const m = String(SS.isPH(EDITION.occasionDate) ? EDITION.slug : EDITION.occasionDate).match(/\d{4}/);
     return m ? m[0] : String(new Date().getFullYear());
   };
-  // Soft page sounds, synthesised (no audio files). Off by default; only plays
-  // after a tap has unlocked audio (phones require that).
+  // Soft page sounds, synthesised (no audio files). On by default (she can turn
+  // it off in the menu); only plays after a tap has unlocked audio (phones require that).
+  SS.pageSoundOn = () => SS.ls.get('pageSound', true);
   SS.pageSound = (kind) => {
-    if (!SS.ls.get('pageSound', false)) return;
+    if (!SS.pageSoundOn()) return;
     try {
       const ac = SS.primeAudio();
       if (ac.state !== 'running') return;

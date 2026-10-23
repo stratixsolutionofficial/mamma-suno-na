@@ -302,6 +302,8 @@ const COPY = {
   "wall.title": ["Sabki Shubhkamnayein", "सबकी शुभकामनाएँ"],
   "wall.empty": ["Sabki shubhkamnayein raaste mein hain… jaldi pahunchengi."],
   "wall.memory": ["Ek yaad"],
+  "wall.reel": ["Video shubhkamna"],
+  "wall.reel.play": ["Video chalaiye"],
   "wall.next": ["Aur ab, ek aur tohfa…"],
   "tohfa.explain": ["Ye aapki kitaab hai. Isme humne aapse kuch sawaal poochhe hain. Jab mann ho, ek sawaal ka jawab dijiye: bol ke ya likh ke."],
   "tohfa.open": ["Open the book"],

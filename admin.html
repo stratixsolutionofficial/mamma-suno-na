@@ -94,7 +94,7 @@
       </section>
 
       <section id="greeting"><h2>Greeting video</h2>
-        <p class="muted">Birthday greeting videos, as many as you like. Choose several at once (⌘/Shift-click) or drop them here. They appear in the app's greetings section (<code>#/shubhkamnayein</code>) in this order. Add who it's from as the caption.</p>
+        <p class="muted">Birthday greeting videos, as many as you like. Choose several at once (⌘/Shift-click) or drop them here. They appear in the app's greetings section (<code>#/shubhkamnayein</code>) in this order, as a swipeable reel (no captions).</p>
         <div class="drop" id="gdrop">Drop greeting videos here, or choose
           <div style="margin-top:8px"><input type="file" id="gfile" accept="video/*" multiple></div>
         </div>
@@ -208,7 +208,7 @@
       return `<div class="mcard" data-kind="${kind}" data-id="${esc(it.id)}" data-ext="${esc(it.ext)}" data-order="${it.order != null ? esc(String(it.order)) : ''}">
         ${thumb}
         <div class="body">
-          <textarea class="cap" placeholder="Caption / who it's from">${esc(it.caption || '')}</textarea>
+          <textarea class="cap" placeholder="${kind === 'greeting' ? 'Note for you (not shown to Mamma)' : "Caption / who it's from"}">${esc(it.caption || '')}</textarea>
           <div class="mrow"><span class="st"></span><span><button class="save">Save</button> <button class="del">Delete</button></span></div>
         </div>
       </div>`;
@@ -261,7 +261,8 @@
         say('Uploading ' + (i + 1) + '/' + list.length + ' — ' + f.name, false, where);
         try {
           await apiPut(path, f, f.type);
-          const cap = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+          // greetings: no file-name caption (Mamma doesn't see captions there)
+          const cap = kind === 'greeting' ? '' : f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
           // order = upload time (+i keeps a multi-select in the picked order)
           await apiPut(metaPath(kind, id), JSON.stringify({ caption: cap, order: Date.now() + i, updatedAt: Date.now() }), 'application/json').catch(() => {});
         } catch (e) { failed.push(f.name + ': ' + e.message); }
