@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="hi-Latn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Mamma ke jawab · (private)</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,0..100,0..1;1,9..144,400..500,0..100,0..1&family=Mukta:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    .gate { max-width: 24rem; margin: 10vh auto 0; text-align: center; }
+    .gate input { width: 100%; min-height: 56px; font-size: 1.2rem; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--ss-paper-edge); background: #FFFBF3; margin: 14px 0; text-align: center; }
+    .meta { font-size: 1rem; color: var(--ss-ink-soft); text-align: center; margin: 6px 0 18px; }
+    .dl { font-size: 1rem; margin-left: 10px; }
+    .refresh { margin: 0 auto 10px; display: block; width: auto; }
+  </style>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <main class="screen" id="app">
+    <div class="book-cover"><div style="width:80px;height:80px;margin:0 auto 6px" id="lotus"></div><h1 id="ct"></h1><p class="hand" id="sub" style="margin:0">Sirf aap ke liye</p></div>
+
+    <form class="gate" id="gate">
+      <p>Ye private page hai. Apni admin key daaliye.</p>
+      <input type="password" id="key" autocomplete="current-password" aria-label="Admin key" placeholder="key">
+      <button class="btn" type="submit">Kholiye</button>
+      <p class="pin-msg" id="err" role="alert"></p>
+    </form>
+
+    <div id="loaded" hidden>
+      <p class="meta" id="meta"></p>
+      <button class="btn soft refresh" id="refresh">Refresh</button>
+      <div id="book"></div>
+    </div>
+  </main>
+
+  <script src="content.js"></script>
+  <script src="assets/core.js"></script>
+  <script src="assets/motifs.js"></script>
+  <script src="assets/ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    const esc = SS.esc, t = SS.t;
+    UI.setBody('');
+    document.getElementById('lotus').innerHTML = MOTIF['rangoli-lotus']();
+    document.getElementById('ct').textContent = t('book.coverTitle');
+
+    const SPACE = (EDITION.settings.backup && EDITION.settings.backup.space) || EDITION.slug;
+    const KEYLS = 'ss_collect_key';
+    const gate = document.getElementById('gate');
+    const err = document.getElementById('err');
+    const loaded = document.getElementById('loaded');
+
+    async function fetchAnswers(key) {
+      const res = await fetch('api/answers?space=' + encodeURIComponent(SPACE) + '&key=' + encodeURIComponent(key), { cache: 'no-store' });
+      if (res.status === 401) throw new Error('Key galat hai.');
+      if (!res.ok) throw new Error('Load nahi ho paaya (' + res.status + ').');
+      return res.json();
+    }
+
+    function show(data) {
+      gate.hidden = true;
+      loaded.hidden = false;
+      document.getElementById('meta').textContent = data.count + ' jawab · abhi tak';
+      // Build an id -> url map from each answer's audio list.
+      const urls = {};
+      data.answers.forEach((a) => (a.audio || []).forEach((seg) => (urls[seg.id] = seg.url)));
+      const answers = data.answers.map((a) => Object.assign({}, a, {
+        takes: [{ take: 1, active: true, segments: (a.audio || []).map((s) => s.id) }]
+      }));
+      UI.renderBook(document.getElementById('book'), {
+        answers, mode: 'reader',
+        // audio comes from public Blob URLs; the player accepts URL strings
+        blobs: async (ids) => ids.map((id) => urls[id]).filter(Boolean),
+        info: (a) => {
+          const q = SS.findQuestion(a.key);
+          return { chapter: (q && q.chapter) || a.chapter, prompt: q ? SS.questionStatus(q).prompt : a.prompt, emotions: (q && q.emotions) || a.emotions || [], askedBy: a.askedBy || '' };
+        },
+        onOpenSeal: async () => true, // it's for you; show sealed ones too
+        afterDraw: (root) => {
+          root.querySelectorAll('.book-ans').forEach((el) => {
+            const a = answers.find((x) => x.key === el.dataset.key);
+            const btn = el.querySelector('.play-btn');
+            (a.audio || []).forEach((seg, n) => {
+              const link = document.createElement('a');
+              link.className = 'dl'; link.href = seg.url; link.download = a.key + ((a.audio.length > 1) ? '-' + (n + 1) : '');
+              link.textContent = 'Download' + (a.audio.length > 1 ? ' ' + (n + 1) : '');
+              (btn || el).appendChild(link);
+            });
+          });
+        }
+      });
+    }
+
+    async function open(key) {
+      err.textContent = '';
+      try {
+        const data = await fetchAnswers(key);
+        localStorage.setItem(KEYLS, key);
+        show(data);
+      } catch (e) { err.textContent = (e && e.message) || 'Error'; }
+    }
+
+    gate.addEventListener('submit', (e) => { e.preventDefault(); open(document.getElementById('key').value.trim()); });
+    document.getElementById('refresh').addEventListener('click', () => open(localStorage.getItem(KEYLS) || ''));
+
+    // auto-open if we've got a key saved
+    const saved = localStorage.getItem(KEYLS);
+    if (saved) open(saved);
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Parivaar panel · Sunao Na</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <style>
+    :root { --ink: #2A2018; --soft: #5B4A3A; --paper: #F6EFE3; --deep: #EDE1CC; --edge: #E2D3B8; --mari: #E5822A; --leaf: #5E7D4F; --sin: #A8261C; --blue: #1F3A52; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; background: var(--paper); color: var(--ink); }
+    header { background: var(--ink); color: var(--paper); padding: 14px 20px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 5; }
+    header h1 { font-size: 18px; margin: 0; flex: 1; }
+    header nav a { color: var(--paper); margin-right: 14px; font-size: 14px; }
+    main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    section { background: #fff; border-radius: 10px; padding: 18px 20px; margin-bottom: 22px; box-shadow: 0 1px 0 var(--edge); }
+    h2 { margin: 0 0 12px; font-size: 20px; }
+    h3 { margin: 18px 0 8px; font-size: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .stat { background: var(--deep); border-radius: 8px; padding: 12px; }
+    .stat b { display: block; font-size: 22px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--edge); vertical-align: top; }
+    th { background: var(--deep); position: sticky; top: 52px; }
+    .badge { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+    .ph { background: #FFE28A; color: #5a4300; }
+    .cf { background: #CFE3F3; color: var(--blue); }
+    .ok { background: #D7E8CF; color: #2E4A22; }
+    .hv { background: #F1D3CF; color: var(--sin); }
+    .md { background: #F6E3C4; color: #7a4a10; }
+    .hid { opacity: .55; }
+    button, .btn { font: inherit; padding: 8px 14px; border-radius: 8px; border: 0; background: var(--mari); color: var(--ink); cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; }
+    button.sec { background: var(--deep); }
+    input, textarea, select { font: inherit; padding: 8px 10px; border: 1px solid var(--edge); border-radius: 8px; background: #FFFBF3; }
+    textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+    .muted { color: var(--soft); font-size: 14px; }
+    .q { font-family: Georgia, serif; font-size: 15px; }
+    .why { color: var(--sin); font-size: 12px; }
+    code { background: var(--deep); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+    .gprev { border: 1px solid var(--edge); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .gprev img { width: 90px; height: 90px; object-fit: cover; border-radius: 6px; margin: 4px; }
+    .copied { color: var(--leaf); font-weight: 600; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Parivaar panel · <span id="ttl"></span></h1>
+    <nav><a href="#status">Status</a><a href="#fill">Bharna hai</a><a href="#preview">Preview</a><a href="#greet">Greetings</a><a href="#whatsapp">WhatsApp</a><a href="#questions">Sawaal</a><a href="padho.html">Padho</a></nav>
+  </header>
+  <main>
+    <section id="status"><h2>Status</h2><div class="grid" id="stats"></div>
+      <p class="muted">Ye page sirf parivaar ke liye hai. Ye <code>content.js</code> ko padh ke dikhata hai; badlav karne ke liye <code>content.js</code> edit kijiye aur page refresh kijiye.</p>
+    </section>
+
+    <section id="fill"><h2>Bharna hai (PLACEHOLDER) aur confirm karna hai (CONFIRM)</h2>
+      <p class="muted"><span class="badge ph">PLACEHOLDER</span> = jab tak nahi bharenge, us se jude sawaal Mamma ko nahi dikhenge. <span class="badge cf">CONFIRM</span> = abhi ye value chal rahi hai; sahi ho toh <code>content.js</code> me se <code>CONFIRM:</code> hata dijiye.</p>
+      <table><thead><tr><th>Kahan</th><th>Field</th><th>Abhi</th><th></th></tr></thead><tbody id="filltb"></tbody></table>
+      <h3>Photo shot list</h3>
+      <table><thead><tr><th>ID</th><th>Alt text</th><th>File</th><th></th></tr></thead><tbody id="phtb"></tbody></table>
+    </section>
+
+    <section id="preview"><h2>Preview as Mamma</h2>
+      <p class="muted">Preview alag dabbe (alag IndexedDB) me chalta hai: PIN nahi maangta, asli jawab nahi chhoota.</p>
+      <div class="row"><label>Simulate date <input type="date" id="simdate"></label>
+        <button id="openprev">Open preview</button>
+        <button class="sec" id="openprevnow">Use today's date</button>
+        <button class="sec" id="resetprev">Clear preview data</button><span id="prevmsg" class="copied"></span></div>
+      <p class="muted">Tip: date ko janamdin se pehle rakhiye toh countdown dikhega; janamdin ya baad ki rakhiye toh reveal.</p>
+    </section>
+
+    <section id="greet"><h2>Greetings</h2>
+      <p class="muted">Har invite ke liye ek link hai. Link kholne wala bolke/likhke shubhkamna banata hai aur ek file WhatsApp pe aapko bhejta hai. Wo file yahan "Greeting file kholiye" me daaliye: audio/photo files aur <code>content.js</code> ke liye snippet mil jayega.</p>
+      <div class="row"><label>Site ka pata (base URL) <input id="base" size="44" placeholder="https://your-site.netlify.app/mamma-sunao-na/"></label></div>
+      <table><thead><tr><th>#</th><th>Kisse</th><th>Status</th><th>Link / message</th></tr></thead><tbody id="gtb"></tbody></table>
+      <h3>Greeting file kholiye</h3>
+      <input type="file" id="gfile" accept=".json,application/json" multiple>
+      <div id="gimport"></div>
+    </section>
+
+    <section id="whatsapp"><h2>WhatsApp messages</h2>
+      <h3>Mamma ke liye (link + PIN hint, PIN nahi)</h3>
+      <textarea id="giftmsg" readonly></textarea><div class="row"><button data-copy="giftmsg">Copy</button></div>
+      <h3>Aaj ka sawaal (nudge)</h3>
+      <div class="row"><select id="nudgeq" style="max-width:100%"></select><button id="nudgecopy">Copy</button><span class="copied" id="nudgemsg"></span></div>
+      <textarea id="nudgetxt" readonly></textarea>
+      <p class="muted">Niyam: heavy sawaal kabhi nudge mat kijiye. Do nudge ka jawab na aaye toh ek hafte ruk jaiye.</p>
+    </section>
+
+    <section id="questions"><h2>Sawaal (resolved preview)</h2>
+      <div class="row"><input id="qsearch" placeholder="Dhoondhiye…" size="30"><label><input type="checkbox" id="onlyhidden"> Sirf chhupe hue</label><span class="muted" id="qcount"></span></div>
+      <div id="qlist"></div>
+    </section>
+  </main>
+
+  <script src="content.js"></script>
+  <script src="assets/core.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    const esc = SS.esc, r = SS.r;
+    const $ = (s) => document.querySelector(s);
+    $('#ttl').textContent = r(EDITION.title);
+
+    const baseIn = $('#base');
+    baseIn.value = localStorage.getItem('ss_admin_base') || new URL('.', location.href).href;
+    const base = () => { let b = baseIn.value.trim(); if (b && !b.endsWith('/')) b += '/'; return b; };
+    baseIn.addEventListener('change', () => { localStorage.setItem('ss_admin_base', baseIn.value.trim()); drawGreetings(); drawWhatsapp(); });
+
+    const copy = async (text, el) => { try { await navigator.clipboard.writeText(text); } catch (e) { prompt('Copy:', text); } if (el) { el.textContent = 'Copied'; setTimeout(() => (el.textContent = ''), 1500); } };
+
+    // ---------------- Status ----------------
+    const all = SS.allQuestions();
+    const visible = all.filter((q) => SS.questionStatus(q).visible);
+    const unlock = SS.unlockAt();
+    const stats = [
+      ['Janamdin', SS.isPH(EDITION.occasionDate) ? '<span class="badge ph">PLACEHOLDER</span>' : esc(SS.formatDate(EDITION.occasionDate))],
+      ['Unlock', unlock ? (Date.now() < unlock ? Math.ceil((unlock - Date.now()) / 864e5) + ' din baaki' : 'Live') : 'Abhi khula hai (date nahi bhari)'],
+      ['PIN', SS.isPH(EDITION.pin) ? '<span class="badge ph">nahi laga</span>' : '<span class="badge ok">laga hai</span>'],
+      ['Sawaal dikh rahe', visible.length + ' / ' + all.length],
+      ['Greetings approved', GREETINGS.filter((g) => g.status === 'approved').length + ' / ' + GREETINGS.length],
+      ['Photos', Object.values(PHOTOS).filter((p) => p.src).length + ' / ' + Object.keys(PHOTOS).length]
+    ];
+    $('#stats').innerHTML = stats.map(([k, v]) => `<div class="stat"><span class="muted">${k}</span><b>${v}</b></div>`).join('');
+
+    // ---------------- Fill list ----------------
+    const rows = [];
+    const scan = (where, obj, prefix) => {
+      for (const [k, v] of Object.entries(obj)) {
+        if (v && typeof v === 'object' && !Array.isArray(v)) { scan(where, v, prefix + k + '.'); continue; }
+        const vals = Array.isArray(v) ? v : [v];
+        vals.forEach((x) => {
+          if (typeof x !== 'string') return;
+          if (x.startsWith('PLACEHOLDER')) rows.push([where, prefix + k, x, 'ph']);
+          else if (x.startsWith('CONFIRM:')) rows.push([where, prefix + k, x.slice(8), 'cf']);
+        });
+      }
+    };
+    scan('EDITION', EDITION, '');
+    PEOPLE.forEach((p) => scan('PEOPLE · ' + (SS.callName(p.key) || p.key), p, ''));
+    scan('PLACES', PLACES, '');
+    scan('RECIPIENT_EXTRA', RECIPIENT_EXTRA, '');
+    if (PEOPLE.some((p) => SS.clean(p.gender) === 'unknown')) rows.push(['Note', 'gender', 'Mickey ka gender set karne pe asked-by line "POOCHH RAHA/RAHI HAI" banegi', 'cf']);
+    rows.sort((a, b) => (a[3] === b[3] ? 0 : a[3] === 'ph' ? -1 : 1));
+    $('#filltb').innerHTML = rows.map(([w, f, v, k]) => `<tr><td>${esc(w)}</td><td><code>${esc(f)}</code></td><td>${esc(v)}</td><td><span class="badge ${k}">${k === 'ph' ? 'PLACEHOLDER' : 'CONFIRM'}</span></td></tr>`).join('');
+    $('#phtb').innerHTML = Object.entries(PHOTOS).map(([id, p]) => `<tr><td><code>${esc(id)}</code>${p.required ? ' ★' : ''}</td><td>${esc(p.alt)}</td><td>${p.src ? esc(p.src) : '—'}</td><td>${p.src ? '<span class="badge ok">bhari</span>' : `<span class="badge ${p.required ? 'ph' : 'cf'}">${p.required ? 'zaroori' : 'khaali'}</span>`}</td></tr>`).join('');
+
+    // ---------------- Preview ----------------
+    $('#simdate').value = SS.isPH(EDITION.occasionDate) ? new Date().toISOString().slice(0, 10) : EDITION.occasionDate;
+    $('#openprev').addEventListener('click', () => window.open('index.html?preview&simulate=' + encodeURIComponent($('#simdate').value) + '#/', '_blank'));
+    $('#openprevnow').addEventListener('click', () => window.open('index.html?preview#/', '_blank'));
+    $('#resetprev').addEventListener('click', () => {
+      const req = indexedDB.deleteDatabase('sunao-preview');
+      Object.keys(localStorage).filter((k) => k.startsWith('ss_prev_')).forEach((k) => localStorage.removeItem(k));
+      req.onsuccess = req.onerror = req.onblocked = () => { $('#prevmsg').textContent = 'Saaf ho gaya (preview tab band karke phir kholiye)'; };
+    });
+
+    // ---------------- Greetings ----------------
+    function inviteMsg(g, i) {
+      const date = SS.formatDate(EDITION.occasionDate) || '[janamdin ki date]';
+      const name = SS.isPH(g.from) ? '[naam]' : r(g.from);
+      return `Namaste ${name} 🙏\n${date} ko ${SS.addressWord()} ka janamdin hai, aur hum unke liye ek khaas digital album bana rahe hain.\nKya aap unke liye ek chhoti si shubhkamna aur unke saath ki ek yaad bhej denge? Bol ke bhi bhej sakte hain, bas 2 minute.\n👉 ${base()}g.html?i=${i}\nYe surprise hai, ${SS.addressWord()} ko mat batana 🤫`;
+    }
+    function drawGreetings() {
+      $('#gtb').innerHTML = GREETINGS.map((g, i) => {
+        const st = g.status === 'approved' ? '<span class="badge ok">approved</span>' : '<span class="badge md">' + esc(g.status || 'pending') + '</span>';
+        const has = [g.text && 'text', g.audio && 'audio', g.video && 'video', g.memory && 'yaad'].filter(Boolean).join(', ');
+        return `<tr><td>${i}</td><td>${esc(SS.isPH(g.from) ? g.from : r(g.from))}<div class="muted">${esc(r(g.relation || ''))}${g.placement === 'tribute' ? ' · tribute' : ''}${g.playInReveal ? ' · reveal montage' : ''}</div></td>
+          <td>${st}<div class="muted">${esc(has || 'khaali')}</div></td>
+          <td><code>${esc(base())}g.html?i=${i}</code><div class="row"><button class="sec" data-inv="${i}">Copy WhatsApp message</button><button class="sec" data-trib="${i}">Copy tribute link</button><span class="copied"></span></div></td></tr>`;
+      }).join('');
+      document.querySelectorAll('[data-inv]').forEach((b) => b.addEventListener('click', () => copy(inviteMsg(GREETINGS[b.dataset.inv], b.dataset.inv), b.parentElement.querySelector('.copied'))));
+      document.querySelectorAll('[data-trib]').forEach((b) => b.addEventListener('click', () => copy(
+        `Ek aur chhoti si guzarish: ${SS.addressWord()} ke liye ek kitaab ban rahi hai jisme unke bhai-behenon ki yaadein bhi hain. Kya aap ${r('{{jiji_badi}}, {{jiji_chhoti}}, {{bhaiya_manjhle}} ya {{bhai_chhote}}')} ke saath ${SS.addressWord()} ki koi yaad bhej sakte hain? Ye janamdin pe nahi, baad mein ek alag hisse mein dikhegi.\n👉 ${base()}g.html?i=${b.dataset.trib}&tribute=1`,
+        b.parentElement.querySelector('.copied'))));
+    }
+    drawGreetings();
+
+    $('#gfile').addEventListener('change', async (e) => {
+      const out = $('#gimport');
+      out.innerHTML = '';
+      for (const f of e.target.files) {
+        let d;
+        try { d = JSON.parse(await f.text()); if (d.format !== 'sunao-na-greeting/1') throw new Error('format'); }
+        catch (err) { out.insertAdjacentHTML('beforeend', `<p class="why">${esc(f.name)}: ye greeting file nahi lag rahi</p>`); continue; }
+        const slug = (d.from || 'greeting').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const div = document.createElement('div');
+        div.className = 'gprev';
+        const toBlob = (b64, type) => { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u[k] = bin.charCodeAt(k); return new Blob([u], { type }); };
+        const files = [];
+        let audioPath = '';
+        if (d.audio) {
+          const ext = /mp4/.test(d.audio.mime) ? 'm4a' : 'webm';
+          audioPath = `audio/greeting-${slug}.${ext}`;
+          files.push([audioPath, toBlob(d.audio.data, d.audio.mime)]);
+        }
+        const photoPaths = (d.photos || []).map((p, k) => { const path = `photos/greeting-${slug}-${k + 1}.jpg`; files.push([path, toBlob(p, 'image/jpeg')]); return path; });
+        const inv = d.invite != null && GREETINGS[d.invite];
+        const snippet = `{ from: ${JSON.stringify(d.from)}, relation: ${JSON.stringify(d.relation || '')}, sort: ${inv ? inv.sort : 99},${inv && inv.featured ? ' featured: true,' : ''}${inv && inv.playInReveal && d.placement !== 'tribute' ? ' playInReveal: true,' : ''} status: "approved",${d.placement === 'tribute' ? ' placement: "tribute",' : ''}
+  text: ${JSON.stringify(d.text || '')},
+  memory: ${JSON.stringify(d.memory || '')},
+  audio: ${JSON.stringify(audioPath)}${photoPaths[0] ? `,\n  photo: ${JSON.stringify(photoPaths[0])}` : (inv && inv.photo ? `,\n  photo: ${JSON.stringify(inv.photo)}` : '')} },`;
+        div.innerHTML = `<b>${esc(d.from)}</b> <span class="muted">${esc(d.relation || '')} · ${esc(d.placement || 'wall')} · ${d.invite != null ? 'invite #' + d.invite : ''}</span>
+          ${d.text ? `<p>${esc(d.text)}</p>` : ''}${d.memory ? `<p><i>Yaad:</i> ${esc(d.memory)}</p>` : ''}
+          <div class="aud"></div><div class="imgs"></div>
+          <h3>1. Ye files download karke <code>mamma-sunao-na/</code> ke andar sahi folder me rakhiye</h3><div class="row dls"></div>
+          <h3>2. <code>content.js</code> → <code>GREETINGS</code> me ${inv ? `entry #${d.invite} ko isse badal dijiye` : 'ye entry jodiye'} (typo theek kar sakte hain)</h3>
+          <textarea readonly>${esc(snippet)}</textarea><div class="row"><button class="sec cp">Copy snippet</button><span class="copied"></span></div>`;
+        if (d.audio) { const a = document.createElement('audio'); a.controls = true; a.src = URL.createObjectURL(files[0][1]); div.querySelector('.aud').appendChild(a); }
+        (d.photos || []).forEach((p) => { const im = document.createElement('img'); im.src = 'data:image/jpeg;base64,' + p; im.alt = d.from + ' ki photo'; div.querySelector('.imgs').appendChild(im); });
+        files.forEach(([path, blob]) => { const a = document.createElement('a'); a.className = 'btn'; a.href = URL.createObjectURL(blob); a.download = path.split('/').pop(); a.textContent = path; div.querySelector('.dls').appendChild(a); });
+        div.querySelector('.cp').addEventListener('click', (ev) => copy(snippet, ev.target.nextElementSibling));
+        out.appendChild(div);
+      }
+    });
+
+    // ---------------- WhatsApp ----------------
+    function drawWhatsapp() {
+      $('#giftmsg').value = `${SS.addressWord()}, ye aapka tohfa hai 🌼\n${base()}\nAapka khaas number: ${r(EDITION.pinHint)}`;
+      const sel = $('#nudgeq');
+      if (!sel.options.length) {
+        visible.filter((q) => SS.weight(q) !== 'heavy').forEach((q) => {
+          const o = document.createElement('option');
+          o.value = q.key; o.textContent = q.key + ' · ' + SS.questionStatus(q).prompt.slice(0, 70);
+          sel.appendChild(o);
+        });
+      }
+      const q = SS.findQuestion(sel.value);
+      $('#nudgetxt').value = q ? `${SS.addressWord()}, aaj ka sawaal 🌼 "${SS.questionStatus(q).prompt}" Jab mann ho tab: ${base()}#/sawaal/${encodeURIComponent(q.key)}` : '';
+    }
+    drawWhatsapp();
+    $('#nudgeq').addEventListener('change', drawWhatsapp);
+    $('#nudgecopy').addEventListener('click', () => copy($('#nudgetxt').value, $('#nudgemsg')));
+    document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => copy($('#' + b.dataset.copy).value, null)));
+
+    // ---------------- Questions ----------------
+    function drawQuestions() {
+      const term = $('#qsearch').value.trim().toLowerCase();
+      const onlyHidden = $('#onlyhidden').checked;
+      let html = '', n = 0;
+      CHAPTERS.forEach((c) => {
+        const qs = (QUESTIONS[c.key] || []).map((q) => Object.assign({ chapter: c.key }, q)).filter((q) => {
+          const st = SS.questionStatus(q);
+          if (onlyHidden && st.visible && c.enabled !== false) return false;
+          return !term || (q.key + ' ' + st.prompt + ' ' + q.prompt).toLowerCase().includes(term);
+        });
+        if (!qs.length) return;
+        html += `<h3>Chapter ${c.number} · ${esc(r(c.title))} ${c.enabled === false ? '<span class="badge md">disabled</span>' : ''}${c.gated ? ' <span class="badge hv">gated</span>' : ''}</h3>
+          <table><thead><tr><th style="width:28%">Key</th><th>Mamma ko dikhega</th><th style="width:14%">Weight</th></tr></thead><tbody>`;
+        qs.forEach((q) => {
+          n++;
+          const st = SS.questionStatus(q);
+          const w = SS.weight(q);
+          html += `<tr class="${st.visible ? '' : 'hid'}"><td><code>${esc(q.key)}</code>${q.photo ? `<div class="muted">📷 ${esc(q.photo)}</div>` : ''}</td>
+            <td><div class="muted">${esc(SS.askedByLine(q.askedBy))}</div><div class="q">${esc(st.prompt)}</div>${st.sub ? `<div class="muted"><i>${esc(st.sub)}</i></div>` : ''}
+              ${(q.followups || []).map((f) => `<div class="muted">↳ ${esc(r(f, { askedBy: q.askedBy }))}</div>`).join('')}
+              ${st.visible ? '' : `<div class="why">Chhupa hua: ${esc(st.reasons.join('; '))}</div>`}
+              <div class="muted">${(q.emotions || []).join(', ')}${SS.isSealable(q) ? ' · ✉︎ sealable' : ''}</div></td>
+            <td><span class="badge ${w === 'heavy' ? 'hv' : w === 'medium' ? 'md' : 'ok'}">${w}</span></td></tr>`;
+        });
+        html += '</tbody></table>';
+      });
+      $('#qlist').innerHTML = html;
+      $('#qcount').textContent = n + ' sawaal';
+    }
+    $('#qsearch').addEventListener('input', drawQuestions);
+    $('#onlyhidden').addEventListener('change', drawQuestions);
+    drawQuestions();
+  })();
+  </script>
+</body>
+</html>

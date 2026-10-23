@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="hi-Latn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Padho · Mamma ki Kahani</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,0..100,0..1;1,9..144,400..500,0..100,0..1&family=Mukta:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    .drop { border: 2px dashed var(--ss-paper-edge); border-radius: 14px; padding: 26px 18px; text-align: center; margin: 18px 0; }
+    .meta { font-size: 1rem; color: var(--ss-ink-soft); }
+    .dl { font-size: 1rem; margin-left: 10px; }
+  </style>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <main class="screen" id="app">
+    <div class="book-cover"><div style="width:80px;height:80px;margin:0 auto 6px" id="lotus"></div><h1 id="ct"></h1><p class="hand" id="sub" style="margin:0"></p></div>
+    <div class="drop" id="drop">
+      <p style="margin-top:0">Mamma ne jo copy bheji hai (<b>…-ki-kahani-YYYY-MM-DD.json</b>), use yahan kholiye.</p>
+      <label class="btn" for="file">Choose file</label>
+      <input type="file" id="file" accept="application/json,.json" multiple class="sr-only">
+      <p class="faint">File isi phone/laptop pe khulti hai. Kahin upload nahi hoti.</p>
+    </div>
+    <p class="pin-msg" id="err" role="alert"></p>
+    <p class="meta" id="meta"></p>
+    <div id="book"></div>
+  </main>
+  <script src="content.js"></script>
+  <script src="assets/core.js"></script>
+  <script src="assets/motifs.js"></script>
+  <script src="assets/ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    const esc = SS.esc, t = SS.t;
+    UI.setBody('');
+    document.getElementById('lotus').innerHTML = MOTIF['rangoli-lotus']();
+    document.getElementById('ct').textContent = t('book.coverTitle');
+    document.getElementById('sub').textContent = 'Padhiye aur suniye';
+    const OPENED = 'ss_reader_opened';
+    const opened = JSON.parse(localStorage.getItem(OPENED) || '{}');
+
+    async function load(files) {
+      const err = document.getElementById('err');
+      err.textContent = '';
+      let latest = null;
+      for (const f of files) {
+        try {
+          const d = SS.parseExport(await f.text());
+          if (!latest || d.exportedAt > latest.exportedAt) latest = d;
+        } catch (e) { err.textContent = (e && e.message) || 'File nahi khul paayi'; }
+      }
+      if (!latest) return;
+      show(latest);
+    }
+
+    function show(data) {
+      const blobs = data.blobs;
+      document.getElementById('meta').textContent = `Copy: ${new Date(data.exportedAt).toLocaleString('en-IN')} · ${data.answers.filter((a) => a.status === 'kept').length} jawab`;
+      const answers = data.answers.map((a) => Object.assign({}, a, { _opened: !!opened[a.key] }));
+      UI.renderBook(document.getElementById('book'), {
+        answers, mode: 'reader',
+        blobs: async (ids) => ids.map((id) => blobs[id]).filter(Boolean),
+        info: (a) => {
+          // prefer current content.js wording; fall back to wording stored in the file
+          const q = SS.findQuestion(a.key);
+          return { chapter: (q && q.chapter) || a.chapter, prompt: q ? SS.questionStatus(q).prompt : a.prompt, emotions: (q && q.emotions) || a.emotions || [], askedBy: a.askedBy || '' };
+        },
+        onOpenSeal: async (a) => {
+          const s = a.seal;
+          if (s.kind === 'date' && !SS.sealIsOpen(s)) {
+            await UI.confirm(`Ye lifafa ${SS.formatDate(s.openOn)} ko khulega. Thoda intezaar.`, 'OK', 'Back');
+            return false;
+          }
+          const label = SS.sealLabel(s);
+          const q = s.kind === 'person' ? `Ye ${label.replace(/^Sirf /, 'sirf ')} hai. Kya aap wahi hain?`
+            : s.kind === 'after_me' ? 'Mamma ne kaha tha ye unke baad khole. Kya sach mein kholna hai?'
+            : `Mauka: "${label}". Kya wo din aa gaya?`;
+          const ok = await UI.confirm(q, 'Yes, open it', 'Not now');
+          if (ok) { opened[a.key] = Date.now(); localStorage.setItem(OPENED, JSON.stringify(opened)); }
+          return ok;
+        },
+        afterDraw: addDownloads
+      });
+      // download links for audio (backup)
+      function addDownloads(root) {
+      root.querySelectorAll('.book-ans').forEach((el) => {
+        const a = answers.find((x) => x.key === el.dataset.key);
+        const segs = SS.activeSegments(a);
+        const btn = el.querySelector('.play-btn');
+        if (!btn || !segs.length) return;
+        segs.forEach((id, n) => {
+          const b = blobs[id];
+          if (!b) return;
+          const ext = /mp4/.test(b.type) ? 'm4a' : 'webm';
+          const link = document.createElement('a');
+          link.className = 'dl'; link.href = URL.createObjectURL(b); link.download = `${a.key}${segs.length > 1 ? '-' + (n + 1) : ''}.${ext}`;
+          link.textContent = 'Download' + (segs.length > 1 ? ' ' + (n + 1) : '');
+          btn.after(link);
+        });
+      });
+      }
+    }
+
+    document.getElementById('file').addEventListener('change', (e) => load([...e.target.files]));
+    const drop = document.getElementById('drop');
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); });
+    drop.addEventListener('drop', (e) => { e.preventDefault(); load([...e.dataTransfer.files]); });
+  })();
+  </script>
+</body>
+</html>

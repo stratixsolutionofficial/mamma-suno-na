@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#F6EFE3"/>
+  <circle cx="600" cy="250" r="220" fill="#E0A526" fill-opacity=".16"/>
+  <path d="M600 110 C630 160 650 200 642 238 C636 266 616 280 600 280 C584 280 564 266 558 238 C550 200 570 160 600 110Z" fill="#F2A93B"/>
+  <path d="M600 168 C616 196 622 220 619 240 C616 256 608 266 600 266 C592 266 584 256 581 240 C578 220 584 196 600 168Z" fill="#FFF4C2"/>
+  <path d="M440 300 C470 300 500 294 600 294 C700 294 730 300 760 294 C748 360 690 392 600 392 C510 392 452 360 440 300Z" fill="#A9552B"/>
+  <text x="600" y="510" text-anchor="middle" font-family="Georgia, serif" font-size="72" fill="#2A2018">Mamma ke liye</text>
+</svg>
