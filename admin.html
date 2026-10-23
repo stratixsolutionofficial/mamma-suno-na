@@ -118,6 +118,7 @@
 
   <script src="content.js"></script>
   <script src="assets/core.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
   <script>
   (function () {
     'use strict';
@@ -265,14 +266,27 @@
           failed.push(f.name + ': ' + (kind === 'photo' ? 'not a photo' : kind === 'video' ? 'not a video/audio' : 'not a video'));
           continue;
         }
-        const useExt = (kind === 'video' && ext === 'bin') ? 'm4a' : ext;
+        // Convert HEIC/HEIF to JPEG so browsers can render them
+        let uploadFile = f;
+        let useExt = (kind === 'video' && ext === 'bin') ? 'm4a' : ext;
+        if (ext === 'heic' || ext === 'heif') {
+          say('Converting ' + (i + 1) + '/' + list.length + ' — ' + f.name + ' (HEIC → JPEG)…', false, where);
+          try {
+            const blob = await heic2any({ blob: f, toType: 'image/jpeg', quality: 0.88 });
+            uploadFile = new File([blob], f.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+            useExt = 'jpg';
+          } catch (e) {
+            failed.push(f.name + ': HEIC conversion failed — ' + e.message);
+            continue;
+          }
+        }
         const id = slug(f.name.replace(/\.[^.]+$/, '')) + '-' + Date.now().toString(36) + '-' + i;
         const path = mediaPath(kind, id, useExt);
         say('Uploading ' + (i + 1) + '/' + list.length + ' — ' + f.name, false, where);
         try {
           // Media goes straight to Blob with a client token: Vercel functions
           // can't receive more than 4.5 MB, which most phone videos exceed.
-          await apiPutFile(path, f, (pct) => { bar.style.width = Math.round(((i + pct / 100) / list.length) * 100) + '%'; });
+          await apiPutFile(path, uploadFile, (pct) => { bar.style.width = Math.round(((i + pct / 100) / list.length) * 100) + '%'; });
           // greetings: no file-name caption (Mamma doesn't see captions there)
           const cap = kind === 'greeting' ? '' : f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
           // order = upload time (+i keeps a multi-select in the picked order)
