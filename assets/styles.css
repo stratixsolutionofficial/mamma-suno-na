@@ -604,7 +604,7 @@ body.has-bgm .cover-menu { right: 62px; }
 .cover-collage.in .cl-tile:not(.seen) { transition-delay: var(--d, 0ms); }
 .cl-img { position: relative; display: block; width: 100%; aspect-ratio: var(--ar, 1); overflow: hidden; background: #E9DFCB; }
 .cl-img img, .cl-img video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; filter: sepia(.1) saturate(.92) contrast(.98); transition: filter 360ms; }
-.cl-cap { display: block; height: calc(var(--s) * .16); padding: 0 6%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+.cl-cap { display: none; height: calc(var(--s) * .16); padding: 0 6%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   font-family: var(--ss-font-hand); font-style: italic; font-variation-settings: 'SOFT' 50, 'WONK' 0, 'opsz' 36; font-size: calc(var(--s) * .072); line-height: calc(var(--s) * .16);
   opacity: 0; transition: opacity 300ms; }
 /* washi tape on some prints */
