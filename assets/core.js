@@ -616,11 +616,26 @@
   // Single audio player (only one thing plays at a time)
   // ------------------------------------------------------------------
   SS.player = {
-    el: null, owner: null, urls: [],
+    el: null, owner: null, url: null, settle: null,
+    _releaseUrl(url = this.url) {
+      if (!url) return;
+      URL.revokeObjectURL(url);
+      if (this.url === url) this.url = null;
+    },
     stop() {
-      if (this.el) { this.el.pause(); this.el.onended = null; }
-      if (this.owner && this.owner.onStop) this.owner.onStop();
+      const owner = this.owner;
+      if (this.el) {
+        this.el.pause();
+        this.el.onended = null;
+        this.el.onerror = null;
+        this.el.ontimeupdate = null;
+        this.el.removeAttribute('src');
+        this.el.load();
+      }
+      this._releaseUrl();
+      if (this.settle) { const settle = this.settle; this.settle = null; settle(); }
       this.owner = null;
+      if (owner && owner.onStop) owner.onStop();
     },
     /** play(list of src|Blob, {onStop, onProgress}) */
     async play(list, owner) {
@@ -632,15 +647,36 @@
       for (const it of items) {
         if (this.owner !== me) return;
         let src = it;
-        if (it instanceof Blob) { src = URL.createObjectURL(it); this.urls.push(src); }
+        let objectUrl = null;
+        if (it instanceof Blob) { src = URL.createObjectURL(it); objectUrl = src; this.url = src; }
         this.el.src = src;
-        try { await this.el.play(); } catch (e) { console.warn('play failed', e); break; }
-        await new Promise((res) => {
-          this.el.onended = res; this.el.onerror = res;
-          this.el.ontimeupdate = () => me.onProgress && me.onProgress(this.el.currentTime, this.el.duration);
-        });
+        try {
+          await this.el.play();
+          if (this.owner !== me) { this._releaseUrl(objectUrl); return; }
+          await new Promise((res) => {
+            let done = false;
+            const finish = () => {
+              if (done) return;
+              done = true;
+              this.el.removeEventListener('ended', finish);
+              this.el.removeEventListener('error', finish);
+              if (this.settle === finish) this.settle = null;
+              res();
+            };
+            this.settle = finish;
+            this.el.addEventListener('ended', finish, { once: true });
+            this.el.addEventListener('error', finish, { once: true });
+            this.el.ontimeupdate = () => me.onProgress && me.onProgress(this.el.currentTime, this.el.duration);
+          });
+        } catch (e) { console.warn('play failed', e); }
+        this._releaseUrl(objectUrl);
+        if (this.owner !== me) return;
       }
-      if (this.owner === me) { this.owner = null; me.onStop && me.onStop(); }
+      if (this.owner === me) {
+        this.el.ontimeupdate = null;
+        this.owner = null;
+        me.onStop && me.onStop();
+      }
     }
   };
   SS.segmentBlobs = async (segIds) => (await Promise.all(segIds.map(SS.recordingBlob))).filter(Boolean);
