@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="referrer" content="no-referrer">
-  <title>Parivaar panel · Sunao Na</title>
+  <title>Family panel · Sunao Na</title>
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <style>
     :root { --ink: #2A2018; --soft: #5B4A3A; --paper: #F6EFE3; --deep: #EDE1CC; --edge: #E2D3B8; --mari: #E5822A; --leaf: #5E7D4F; --sin: #A8261C; --blue: #1F3A52; }
@@ -14,34 +14,17 @@
     header { background: var(--ink); color: var(--paper); padding: 14px 20px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 5; }
     header h1 { font-size: 18px; margin: 0; flex: 1; }
     header nav a { color: var(--paper); margin-right: 14px; font-size: 14px; }
-    main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    header .logout { color: var(--paper); font-size: 13px; cursor: pointer; opacity: .85; background: none; border: 1px solid rgba(255,255,255,.3); border-radius: 6px; padding: 4px 10px; }
+    main { max-width: 1000px; margin: 0 auto; padding: 20px; }
     section { background: #fff; border-radius: 10px; padding: 18px 20px; margin-bottom: 22px; box-shadow: 0 1px 0 var(--edge); }
     h2 { margin: 0 0 12px; font-size: 20px; }
     h3 { margin: 18px 0 8px; font-size: 16px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-    .stat { background: var(--deep); border-radius: 8px; padding: 12px; }
-    .stat b { display: block; font-size: 22px; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--edge); vertical-align: top; }
-    th { background: var(--deep); position: sticky; top: 52px; }
-    .badge { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
-    .ph { background: #FFE28A; color: #5a4300; }
-    .cf { background: #CFE3F3; color: var(--blue); }
-    .ok { background: #D7E8CF; color: #2E4A22; }
-    .hv { background: #F1D3CF; color: var(--sin); }
-    .md { background: #F6E3C4; color: #7a4a10; }
-    .hid { opacity: .55; }
     button, .btn { font: inherit; padding: 8px 14px; border-radius: 8px; border: 0; background: var(--mari); color: var(--ink); cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; }
     button.sec { background: var(--deep); }
     input, textarea, select { font: inherit; padding: 8px 10px; border: 1px solid var(--edge); border-radius: 8px; background: #FFFBF3; }
-    textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
     .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
     .muted { color: var(--soft); font-size: 14px; }
-    .q { font-family: Georgia, serif; font-size: 15px; }
-    .why { color: var(--sin); font-size: 12px; }
     code { background: var(--deep); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
-    .gprev { border: 1px solid var(--edge); border-radius: 8px; padding: 12px; margin: 10px 0; }
-    .gprev img { width: 90px; height: 90px; object-fit: cover; border-radius: 6px; margin: 4px; }
     .copied { color: var(--leaf); font-weight: 600; margin-left: 8px; }
     .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
     .mcard { border: 1px solid var(--edge); border-radius: 10px; overflow: hidden; background: #FFFBF3; display: flex; flex-direction: column; }
@@ -55,84 +38,82 @@
     .mcard button.save { background: var(--leaf); color: #fff; padding: 4px 10px; font-size: 12px; }
     .drop { border: 2px dashed var(--edge); border-radius: 10px; padding: 18px; text-align: center; color: var(--soft); margin: 10px 0; }
     .drop.over { border-color: var(--mari); background: var(--deep); }
-    .lock-note { background: #FFF3D6; border: 1px solid #F0D48A; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
     .prog { height: 6px; background: var(--deep); border-radius: 4px; overflow: hidden; margin-top: 6px; }
     .prog > i { display: block; height: 100%; width: 0; background: var(--leaf); transition: width .2s; }
+    /* login gate */
+    .gate { max-width: 24rem; margin: 12vh auto 0; text-align: center; background: #fff; padding: 28px 24px; border-radius: 12px; box-shadow: 0 1px 0 var(--edge); }
+    .gate h1 { font-size: 22px; margin: 0 0 6px; }
+    .gate input { width: 100%; min-height: 50px; font-size: 1.1rem; padding: 10px 14px; margin: 14px 0; text-align: center; }
+    .gate .err { color: var(--sin); min-height: 1.4em; font-size: 14px; }
+    /* questions editor */
+    .qcard { border: 1px solid var(--edge); border-radius: 10px; padding: 12px 14px; margin: 10px 0; background: #FFFBF3; }
+    .qcard.off { opacity: .55; }
+    .qcard .qkey { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--soft); }
+    .qcard textarea { width: 100%; min-height: 54px; font-size: 14px; margin-top: 6px; }
+    .qcard .qrow { display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+    .qchap { margin: 22px 0 6px; font-size: 15px; font-weight: 700; color: var(--blue); }
+    .pill { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--deep); }
+    .saveall { position: sticky; bottom: 0; background: #fff; padding: 12px 0; border-top: 1px solid var(--edge); display: flex; gap: 12px; align-items: center; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Parivaar panel · <span id="ttl"></span></h1>
-    <nav><a href="#status">Status</a><a href="#fill">Bharna hai</a><a href="#media">Album</a><a href="#preview">Preview</a><a href="#greet">Greetings</a><a href="#whatsapp">WhatsApp</a><a href="#questions">Sawaal</a><a href="padho.html">Padho</a></nav>
-  </header>
-  <main>
-    <section id="status"><h2>Status</h2><div class="grid" id="stats"></div>
-      <p class="muted">Ye page sirf parivaar ke liye hai. Ye <code>content.js</code> ko padh ke dikhata hai; badlav karne ke liye <code>content.js</code> edit kijiye aur page refresh kijiye.</p>
-    </section>
+  <!-- Login gate (shown until the admin password is verified) -->
+  <div id="gate" class="gate">
+    <h1>Family panel</h1>
+    <p class="muted">Enter the admin password to continue.</p>
+    <input type="password" id="gkey" autocomplete="current-password" placeholder="Admin password" aria-label="Admin password">
+    <button class="btn" id="gbtn" style="width:100%">Enter</button>
+    <p class="err" id="gerr" role="alert"></p>
+  </div>
 
-    <section id="fill"><h2>Bharna hai (PLACEHOLDER) aur confirm karna hai (CONFIRM)</h2>
-      <p class="muted"><span class="badge ph">PLACEHOLDER</span> = jab tak nahi bharenge, us se jude sawaal Mamma ko nahi dikhenge. <span class="badge cf">CONFIRM</span> = abhi ye value chal rahi hai; sahi ho toh <code>content.js</code> me se <code>CONFIRM:</code> hata dijiye.</p>
-      <table><thead><tr><th>Kahan</th><th>Field</th><th>Abhi</th><th></th></tr></thead><tbody id="filltb"></tbody></table>
-      <h3>Photo shot list</h3>
-      <table><thead><tr><th>ID</th><th>Alt text</th><th>File</th><th></th></tr></thead><tbody id="phtb"></tbody></table>
-    </section>
-
-    <section id="media"><h2>Album · Tasveerein aur Aawaazein</h2>
-      <p class="muted">Yahan se photos (collage ke liye) aur doosron se mili recordings (video/audio) Vercel Blob pe upload hoti hain. App me ye <code>#/tasveerein</code> (collage) aur <code>#/aawaazein</code> (recordings) me dikhti hain. Upload karne ke liye apni <b>admin key</b> (Vercel ka <code>ADMIN_SECRET</code>) chahiye.</p>
-      <p class="lock-note" id="mediaLock" hidden>Admin key daaliye, warna upload/delete kaam nahi karega.</p>
-      <div class="row">
-        <label>Admin key <input type="password" id="mkey" autocomplete="current-password" placeholder="ADMIN_SECRET" size="26"></label>
-        <button class="sec" id="mload">Album load karo</button>
+  <!-- Admin app (hidden until login) -->
+  <div id="admin" hidden>
+    <header>
+      <h1>Family panel · <span id="ttl"></span></h1>
+      <nav><a href="#collage">Collage media</a><a href="#greeting">Greeting video</a><a href="#questions">Questions</a></nav>
+      <button class="logout" id="logout">Lock</button>
+    </header>
+    <main>
+      <section id="collage"><h2>Collage · Photos &amp; Videos</h2>
+        <p class="muted">Upload photos and videos for the collage. They appear in the app at <code>#/tasveerein</code> (photos) and <code>#/aawaazein</code> (videos/recordings).</p>
         <span class="copied" id="mmsg"></span>
-      </div>
 
-      <h3>Photos (collage)</h3>
-      <div class="drop" id="pdrop">Photos yahan drop kijiye, ya chuniye
-        <div style="margin-top:8px"><input type="file" id="pfile" accept="image/*" multiple></div>
-      </div>
-      <div class="prog" id="pprog" hidden><i></i></div>
-      <div class="mgrid" id="pgrid"></div>
+        <h3>Photos</h3>
+        <div class="drop" id="pdrop">Drop photos here, or choose
+          <div style="margin-top:8px"><input type="file" id="pfile" accept="image/*" multiple></div>
+        </div>
+        <div class="prog" id="pprog" hidden><i></i></div>
+        <div class="mgrid" id="pgrid"></div>
 
-      <h3 style="margin-top:22px">Recordings (video / audio — doosron se mili)</h3>
-      <div class="drop" id="vdrop">Video ya audio recordings yahan drop kijiye, ya chuniye
-        <div style="margin-top:8px"><input type="file" id="vfile" accept="video/*,audio/*" multiple></div>
-      </div>
-      <div class="prog" id="vprog" hidden><i></i></div>
-      <div class="mgrid" id="vgrid"></div>
-    </section>
+        <h3 style="margin-top:22px">Videos</h3>
+        <div class="drop" id="vdrop">Drop videos (or audio) here, or choose
+          <div style="margin-top:8px"><input type="file" id="vfile" accept="video/*,audio/*" multiple></div>
+        </div>
+        <div class="prog" id="vprog" hidden><i></i></div>
+        <div class="mgrid" id="vgrid"></div>
+      </section>
 
-    <section id="preview"><h2>Preview as Mamma</h2>
-      <p class="muted">Preview alag dabbe (alag IndexedDB) me chalta hai: PIN nahi maangta, asli jawab nahi chhoota.</p>
-      <div class="row"><label>Simulate date <input type="date" id="simdate"></label>
-        <button id="openprev">Open preview</button>
-        <button class="sec" id="openprevnow">Use today's date</button>
-        <button class="sec" id="resetprev">Clear preview data</button><span id="prevmsg" class="copied"></span></div>
-      <p class="muted">Tip: date ko janamdin se pehle rakhiye toh countdown dikhega; janamdin ya baad ki rakhiye toh reveal.</p>
-    </section>
+      <section id="greeting"><h2>Greeting video</h2>
+        <p class="muted">One greeting video for the birthday. Uploading a new one replaces the old. It appears in the app's greetings section.</p>
+        <div class="drop" id="gdrop">Drop the greeting video here, or choose
+          <div style="margin-top:8px"><input type="file" id="gfile" accept="video/*"></div>
+        </div>
+        <div class="prog" id="gprog" hidden><i></i></div>
+        <div id="gcur"></div>
+      </section>
 
-    <section id="greet"><h2>Greetings</h2>
-      <p class="muted">Har invite ke liye ek link hai. Link kholne wala bolke/likhke shubhkamna banata hai aur ek file WhatsApp pe aapko bhejta hai. Wo file yahan "Greeting file kholiye" me daaliye: audio/photo files aur <code>content.js</code> ke liye snippet mil jayega.</p>
-      <div class="row"><label>Site ka pata (base URL) <input id="base" size="44" placeholder="https://your-site.netlify.app/mamma-sunao-na/"></label></div>
-      <table><thead><tr><th>#</th><th>Kisse</th><th>Status</th><th>Link / message</th></tr></thead><tbody id="gtb"></tbody></table>
-      <h3>Greeting file kholiye</h3>
-      <input type="file" id="gfile" accept=".json,application/json" multiple>
-      <div id="gimport"></div>
-    </section>
-
-    <section id="whatsapp"><h2>WhatsApp messages</h2>
-      <h3>Mamma ke liye (link + PIN hint, PIN nahi)</h3>
-      <textarea id="giftmsg" readonly></textarea><div class="row"><button data-copy="giftmsg">Copy</button></div>
-      <h3>Aaj ka sawaal (nudge)</h3>
-      <div class="row"><select id="nudgeq" style="max-width:100%"></select><button id="nudgecopy">Copy</button><span class="copied" id="nudgemsg"></span></div>
-      <textarea id="nudgetxt" readonly></textarea>
-      <p class="muted">Niyam: heavy sawaal kabhi nudge mat kijiye. Do nudge ka jawab na aaye toh ek hafte ruk jaiye.</p>
-    </section>
-
-    <section id="questions"><h2>Sawaal (resolved preview)</h2>
-      <div class="row"><input id="qsearch" placeholder="Dhoondhiye…" size="30"><label><input type="checkbox" id="onlyhidden"> Sirf chhupe hue</label><span class="muted" id="qcount"></span></div>
-      <div id="qlist"></div>
-    </section>
-  </main>
+      <section id="questions"><h2>Questions</h2>
+        <p class="muted">Edit the text shown to Mamma, or turn a question off. Changes are saved to the cloud and the app picks them up automatically. The original wording stays in <code>content.js</code> as a fallback.</p>
+        <div class="row"><input id="qsearch" placeholder="Search…" size="30"><span class="muted" id="qcount"></span></div>
+        <div id="qlist"></div>
+        <div class="saveall">
+          <button class="btn" id="qsave">Save all question changes</button>
+          <button class="sec" id="qreset">Reset to original</button>
+          <span class="copied" id="qmsg"></span>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script src="content.js"></script>
   <script src="assets/core.js"></script>
@@ -141,182 +122,49 @@
     'use strict';
     const esc = SS.esc, r = SS.r;
     const $ = (s) => document.querySelector(s);
-    $('#ttl').textContent = r(EDITION.title);
-
-    const baseIn = $('#base');
-    baseIn.value = localStorage.getItem('ss_admin_base') || new URL('.', location.href).href;
-    const base = () => { let b = baseIn.value.trim(); if (b && !b.endsWith('/')) b += '/'; return b; };
-    baseIn.addEventListener('change', () => { localStorage.setItem('ss_admin_base', baseIn.value.trim()); drawGreetings(); drawWhatsapp(); });
-
-    const copy = async (text, el) => { try { await navigator.clipboard.writeText(text); } catch (e) { prompt('Copy:', text); } if (el) { el.textContent = 'Copied'; setTimeout(() => (el.textContent = ''), 1500); } };
-
-    // ---------------- Status ----------------
-    const all = SS.allQuestions();
-    const visible = all.filter((q) => SS.questionStatus(q).visible);
-    const unlock = SS.unlockAt();
-    const stats = [
-      ['Janamdin', SS.isPH(EDITION.occasionDate) ? '<span class="badge ph">PLACEHOLDER</span>' : esc(SS.formatDate(EDITION.occasionDate))],
-      ['Unlock', unlock ? (Date.now() < unlock ? Math.ceil((unlock - Date.now()) / 864e5) + ' din baaki' : 'Live') : 'Abhi khula hai (date nahi bhari)'],
-      ['PIN', SS.isPH(EDITION.pin) ? '<span class="badge ph">nahi laga</span>' : '<span class="badge ok">laga hai</span>'],
-      ['Sawaal dikh rahe', visible.length + ' / ' + all.length],
-      ['Greetings approved', GREETINGS.filter((g) => g.status === 'approved').length + ' / ' + GREETINGS.length],
-      ['Photos', Object.values(PHOTOS).filter((p) => p.src).length + ' / ' + Object.keys(PHOTOS).length]
-    ];
-    $('#stats').innerHTML = stats.map(([k, v]) => `<div class="stat"><span class="muted">${k}</span><b>${v}</b></div>`).join('');
-
-    // ---------------- Fill list ----------------
-    const rows = [];
-    const scan = (where, obj, prefix) => {
-      for (const [k, v] of Object.entries(obj)) {
-        if (v && typeof v === 'object' && !Array.isArray(v)) { scan(where, v, prefix + k + '.'); continue; }
-        const vals = Array.isArray(v) ? v : [v];
-        vals.forEach((x) => {
-          if (typeof x !== 'string') return;
-          if (x.startsWith('PLACEHOLDER')) rows.push([where, prefix + k, x, 'ph']);
-          else if (x.startsWith('CONFIRM:')) rows.push([where, prefix + k, x.slice(8), 'cf']);
-        });
-      }
-    };
-    scan('EDITION', EDITION, '');
-    PEOPLE.forEach((p) => scan('PEOPLE · ' + (SS.callName(p.key) || p.key), p, ''));
-    scan('PLACES', PLACES, '');
-    scan('RECIPIENT_EXTRA', RECIPIENT_EXTRA, '');
-    if (PEOPLE.some((p) => SS.clean(p.gender) === 'unknown')) rows.push(['Note', 'gender', 'Mickey ka gender set karne pe asked-by line "POOCHH RAHA/RAHI HAI" banegi', 'cf']);
-    rows.sort((a, b) => (a[3] === b[3] ? 0 : a[3] === 'ph' ? -1 : 1));
-    $('#filltb').innerHTML = rows.map(([w, f, v, k]) => `<tr><td>${esc(w)}</td><td><code>${esc(f)}</code></td><td>${esc(v)}</td><td><span class="badge ${k}">${k === 'ph' ? 'PLACEHOLDER' : 'CONFIRM'}</span></td></tr>`).join('');
-    $('#phtb').innerHTML = Object.entries(PHOTOS).map(([id, p]) => `<tr><td><code>${esc(id)}</code>${p.required ? ' ★' : ''}</td><td>${esc(p.alt)}</td><td>${p.src ? esc(p.src) : '—'}</td><td>${p.src ? '<span class="badge ok">bhari</span>' : `<span class="badge ${p.required ? 'ph' : 'cf'}">${p.required ? 'zaroori' : 'khaali'}</span>`}</td></tr>`).join('');
-
-    // ---------------- Preview ----------------
-    $('#simdate').value = SS.isPH(EDITION.occasionDate) ? new Date().toISOString().slice(0, 10) : EDITION.occasionDate;
-    $('#openprev').addEventListener('click', () => window.open('index.html?preview&simulate=' + encodeURIComponent($('#simdate').value) + '#/', '_blank'));
-    $('#openprevnow').addEventListener('click', () => window.open('index.html?preview#/', '_blank'));
-    $('#resetprev').addEventListener('click', () => {
-      const req = indexedDB.deleteDatabase('sunao-preview');
-      Object.keys(localStorage).filter((k) => k.startsWith('ss_prev_')).forEach((k) => localStorage.removeItem(k));
-      req.onsuccess = req.onerror = req.onblocked = () => { $('#prevmsg').textContent = 'Saaf ho gaya (preview tab band karke phir kholiye)'; };
-    });
-
-    // ---------------- Greetings ----------------
-    function inviteMsg(g, i) {
-      const date = SS.formatDate(EDITION.occasionDate) || '[janamdin ki date]';
-      const name = SS.isPH(g.from) ? '[naam]' : r(g.from);
-      return `Namaste ${name} 🙏\n${date} ko ${SS.addressWord()} ka janamdin hai, aur hum unke liye ek khaas digital album bana rahe hain.\nKya aap unke liye ek chhoti si shubhkamna aur unke saath ki ek yaad bhej denge? Bol ke bhi bhej sakte hain, bas 2 minute.\n👉 ${base()}g.html?i=${i}\nYe surprise hai, ${SS.addressWord()} ko mat batana 🤫`;
-    }
-    function drawGreetings() {
-      $('#gtb').innerHTML = GREETINGS.map((g, i) => {
-        const st = g.status === 'approved' ? '<span class="badge ok">approved</span>' : '<span class="badge md">' + esc(g.status || 'pending') + '</span>';
-        const has = [g.text && 'text', g.audio && 'audio', g.video && 'video', g.memory && 'yaad'].filter(Boolean).join(', ');
-        return `<tr><td>${i}</td><td>${esc(SS.isPH(g.from) ? g.from : r(g.from))}<div class="muted">${esc(r(g.relation || ''))}${g.placement === 'tribute' ? ' · tribute' : ''}${g.playInReveal ? ' · reveal montage' : ''}</div></td>
-          <td>${st}<div class="muted">${esc(has || 'khaali')}</div></td>
-          <td><code>${esc(base())}g.html?i=${i}</code><div class="row"><button class="sec" data-inv="${i}">Copy WhatsApp message</button><button class="sec" data-trib="${i}">Copy tribute link</button><span class="copied"></span></div></td></tr>`;
-      }).join('');
-      document.querySelectorAll('[data-inv]').forEach((b) => b.addEventListener('click', () => copy(inviteMsg(GREETINGS[b.dataset.inv], b.dataset.inv), b.parentElement.querySelector('.copied'))));
-      document.querySelectorAll('[data-trib]').forEach((b) => b.addEventListener('click', () => copy(
-        `Ek aur chhoti si guzarish: ${SS.addressWord()} ke liye ek kitaab ban rahi hai jisme unke bhai-behenon ki yaadein bhi hain. Kya aap ${r('{{jiji_badi}}, {{jiji_chhoti}}, {{bhaiya_manjhle}} ya {{bhai_chhote}}')} ke saath ${SS.addressWord()} ki koi yaad bhej sakte hain? Ye janamdin pe nahi, baad mein ek alag hisse mein dikhegi.\n👉 ${base()}g.html?i=${b.dataset.trib}&tribute=1`,
-        b.parentElement.querySelector('.copied'))));
-    }
-    drawGreetings();
-
-    $('#gfile').addEventListener('change', async (e) => {
-      const out = $('#gimport');
-      out.innerHTML = '';
-      for (const f of e.target.files) {
-        let d;
-        try { d = JSON.parse(await f.text()); if (d.format !== 'sunao-na-greeting/1') throw new Error('format'); }
-        catch (err) { out.insertAdjacentHTML('beforeend', `<p class="why">${esc(f.name)}: ye greeting file nahi lag rahi</p>`); continue; }
-        const slug = (d.from || 'greeting').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const div = document.createElement('div');
-        div.className = 'gprev';
-        const toBlob = (b64, type) => { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u[k] = bin.charCodeAt(k); return new Blob([u], { type }); };
-        const files = [];
-        let audioPath = '';
-        if (d.audio) {
-          const ext = /mp4/.test(d.audio.mime) ? 'm4a' : 'webm';
-          audioPath = `audio/greeting-${slug}.${ext}`;
-          files.push([audioPath, toBlob(d.audio.data, d.audio.mime)]);
-        }
-        const photoPaths = (d.photos || []).map((p, k) => { const path = `photos/greeting-${slug}-${k + 1}.jpg`; files.push([path, toBlob(p, 'image/jpeg')]); return path; });
-        const inv = d.invite != null && GREETINGS[d.invite];
-        const snippet = `{ from: ${JSON.stringify(d.from)}, relation: ${JSON.stringify(d.relation || '')}, sort: ${inv ? inv.sort : 99},${inv && inv.featured ? ' featured: true,' : ''}${inv && inv.playInReveal && d.placement !== 'tribute' ? ' playInReveal: true,' : ''} status: "approved",${d.placement === 'tribute' ? ' placement: "tribute",' : ''}
-  text: ${JSON.stringify(d.text || '')},
-  memory: ${JSON.stringify(d.memory || '')},
-  audio: ${JSON.stringify(audioPath)}${photoPaths[0] ? `,\n  photo: ${JSON.stringify(photoPaths[0])}` : (inv && inv.photo ? `,\n  photo: ${JSON.stringify(inv.photo)}` : '')} },`;
-        div.innerHTML = `<b>${esc(d.from)}</b> <span class="muted">${esc(d.relation || '')} · ${esc(d.placement || 'wall')} · ${d.invite != null ? 'invite #' + d.invite : ''}</span>
-          ${d.text ? `<p>${esc(d.text)}</p>` : ''}${d.memory ? `<p><i>Yaad:</i> ${esc(d.memory)}</p>` : ''}
-          <div class="aud"></div><div class="imgs"></div>
-          <h3>1. Ye files download karke <code>mamma-sunao-na/</code> ke andar sahi folder me rakhiye</h3><div class="row dls"></div>
-          <h3>2. <code>content.js</code> → <code>GREETINGS</code> me ${inv ? `entry #${d.invite} ko isse badal dijiye` : 'ye entry jodiye'} (typo theek kar sakte hain)</h3>
-          <textarea readonly>${esc(snippet)}</textarea><div class="row"><button class="sec cp">Copy snippet</button><span class="copied"></span></div>`;
-        if (d.audio) { const a = document.createElement('audio'); a.controls = true; a.src = URL.createObjectURL(files[0][1]); div.querySelector('.aud').appendChild(a); }
-        (d.photos || []).forEach((p) => { const im = document.createElement('img'); im.src = 'data:image/jpeg;base64,' + p; im.alt = d.from + ' ki photo'; div.querySelector('.imgs').appendChild(im); });
-        files.forEach(([path, blob]) => { const a = document.createElement('a'); a.className = 'btn'; a.href = URL.createObjectURL(blob); a.download = path.split('/').pop(); a.textContent = path; div.querySelector('.dls').appendChild(a); });
-        div.querySelector('.cp').addEventListener('click', (ev) => copy(snippet, ev.target.nextElementSibling));
-        out.appendChild(div);
-      }
-    });
-
-    // ---------------- WhatsApp ----------------
-    function drawWhatsapp() {
-      $('#giftmsg').value = `${SS.addressWord()}, ye aapka tohfa hai 🌼\n${base()}\nAapka khaas number: ${r(EDITION.pinHint)}`;
-      const sel = $('#nudgeq');
-      if (!sel.options.length) {
-        visible.filter((q) => SS.weight(q) !== 'heavy').forEach((q) => {
-          const o = document.createElement('option');
-          o.value = q.key; o.textContent = q.key + ' · ' + SS.questionStatus(q).prompt.slice(0, 70);
-          sel.appendChild(o);
-        });
-      }
-      const q = SS.findQuestion(sel.value);
-      $('#nudgetxt').value = q ? `${SS.addressWord()}, aaj ka sawaal 🌼 "${SS.questionStatus(q).prompt}" Jab mann ho tab: ${base()}#/sawaal/${encodeURIComponent(q.key)}` : '';
-    }
-    drawWhatsapp();
-    $('#nudgeq').addEventListener('change', drawWhatsapp);
-    $('#nudgecopy').addEventListener('click', () => copy($('#nudgetxt').value, $('#nudgemsg')));
-    document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => copy($('#' + b.dataset.copy).value, null)));
-
-    // ---------------- Questions ----------------
-    function drawQuestions() {
-      const term = $('#qsearch').value.trim().toLowerCase();
-      const onlyHidden = $('#onlyhidden').checked;
-      let html = '', n = 0;
-      CHAPTERS.forEach((c) => {
-        const qs = (QUESTIONS[c.key] || []).map((q) => Object.assign({ chapter: c.key }, q)).filter((q) => {
-          const st = SS.questionStatus(q);
-          if (onlyHidden && st.visible && c.enabled !== false) return false;
-          return !term || (q.key + ' ' + st.prompt + ' ' + q.prompt).toLowerCase().includes(term);
-        });
-        if (!qs.length) return;
-        html += `<h3>Chapter ${c.number} · ${esc(r(c.title))} ${c.enabled === false ? '<span class="badge md">disabled</span>' : ''}${c.gated ? ' <span class="badge hv">gated</span>' : ''}</h3>
-          <table><thead><tr><th style="width:28%">Key</th><th>Mamma ko dikhega</th><th style="width:14%">Weight</th></tr></thead><tbody>`;
-        qs.forEach((q) => {
-          n++;
-          const st = SS.questionStatus(q);
-          const w = SS.weight(q);
-          html += `<tr class="${st.visible ? '' : 'hid'}"><td><code>${esc(q.key)}</code>${q.photo ? `<div class="muted">📷 ${esc(q.photo)}</div>` : ''}</td>
-            <td><div class="muted">${esc(SS.askedByLine(q.askedBy))}</div><div class="q">${esc(st.prompt)}</div>${st.sub ? `<div class="muted"><i>${esc(st.sub)}</i></div>` : ''}
-              ${(q.followups || []).map((f) => `<div class="muted">↳ ${esc(r(f, { askedBy: q.askedBy }))}</div>`).join('')}
-              ${st.visible ? '' : `<div class="why">Chhupa hua: ${esc(st.reasons.join('; '))}</div>`}
-              <div class="muted">${(q.emotions || []).join(', ')}${SS.isSealable(q) ? ' · ✉︎ sealable' : ''}</div></td>
-            <td><span class="badge ${w === 'heavy' ? 'hv' : w === 'medium' ? 'md' : 'ok'}">${w}</span></td></tr>`;
-        });
-        html += '</tbody></table>';
-      });
-      $('#qlist').innerHTML = html;
-      $('#qcount').textContent = n + ' sawaal';
-    }
-    $('#qsearch').addEventListener('input', drawQuestions);
-    $('#onlyhidden').addEventListener('change', drawQuestions);
-    drawQuestions();
-
-    // ---------------- Album (photos + recordings) ----------------
     const SPACE = (EDITION.settings.backup && EDITION.settings.backup.space) || EDITION.slug;
-    const mkey = $('#mkey');
-    mkey.value = sessionStorage.getItem('ss_admin_mkey') || '';
-    mkey.addEventListener('change', () => sessionStorage.setItem('ss_admin_mkey', mkey.value.trim()));
-    const mmsg = $('#mmsg');
-    const say = (txt, bad) => { mmsg.textContent = txt; mmsg.style.color = bad ? 'var(--sin)' : 'var(--leaf)'; };
-    const keyVal = () => mkey.value.trim();
-    const ensureKey = () => { const ok = !!keyVal(); $('#mediaLock').hidden = ok; return ok; };
+
+    // ---------------- Login gate ----------------
+    const gate = $('#gate'), admin = $('#admin'), gerr = $('#gerr');
+    let KEY = sessionStorage.getItem('ss_admin_key') || '';
+
+    async function verify(key) {
+      const res = await fetch('api/admin-check', { method: 'POST', headers: { 'x-admin-key': key } });
+      return res.ok;
+    }
+    function unlock() { gate.hidden = true; admin.hidden = false; boot(); }
+    async function tryLogin(key) {
+      gerr.textContent = '';
+      try {
+        if (await verify(key)) { KEY = key; sessionStorage.setItem('ss_admin_key', key); unlock(); }
+        else gerr.textContent = 'Wrong password.';
+      } catch (e) { gerr.textContent = 'Could not reach the server. Is the backend running?'; }
+    }
+    $('#gbtn').addEventListener('click', () => tryLogin($('#gkey').value.trim()));
+    $('#gkey').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryLogin($('#gkey').value.trim()); });
+    $('#logout').addEventListener('click', () => { sessionStorage.removeItem('ss_admin_key'); location.reload(); });
+    // auto-unlock if we already have a valid key this session
+    if (KEY) verify(KEY).then((ok) => { if (ok) unlock(); });
+
+    // ---------------- Shared API helpers ----------------
+    const copy = async (text, el) => { try { await navigator.clipboard.writeText(text); } catch (e) { prompt('Copy:', text); } if (el) { el.textContent = 'Copied'; setTimeout(() => (el.textContent = ''), 1500); } };
+    async function apiPut(path, body, contentType) {
+      const res = await fetch('api/upload?path=' + encodeURIComponent(path), {
+        method: 'POST', headers: { 'content-type': contentType || 'application/octet-stream', 'x-admin-key': KEY }, body
+      });
+      if (res.status === 401) throw new Error('Admin key is incorrect.');
+      if (!res.ok) throw new Error('Upload failed (' + res.status + ')');
+      return res.json();
+    }
+    async function apiDelete(path) {
+      const res = await fetch('api/upload?path=' + encodeURIComponent(path), { method: 'DELETE', headers: { 'x-admin-key': KEY } });
+      if (!res.ok && res.status !== 200) throw new Error('Delete failed (' + res.status + ')');
+    }
+    async function loadGallery() {
+      const res = await fetch('api/gallery?space=' + encodeURIComponent(SPACE), { cache: 'no-store' });
+      if (!res.ok) throw new Error('Load failed (' + res.status + ')');
+      return res.json();
+    }
 
     const IMG_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
     const VID_EXT = ['mp4', 'webm', 'mov', 'm4v'];
@@ -331,29 +179,16 @@
       return 'bin';
     };
 
-    async function apiPut(path, body, contentType) {
-      const res = await fetch('api/upload?path=' + encodeURIComponent(path), {
-        method: 'POST',
-        headers: { 'content-type': contentType || 'application/octet-stream', 'x-admin-key': keyVal() },
-        body
-      });
-      if (res.status === 401) throw new Error('Admin key galat hai.');
-      if (!res.ok) throw new Error('Upload fail (' + res.status + ')');
-      return res.json();
-    }
-    async function apiDelete(path) {
-      const res = await fetch('api/upload?path=' + encodeURIComponent(path), {
-        method: 'DELETE', headers: { 'x-admin-key': keyVal() }
-      });
-      if (!res.ok && res.status !== 200) throw new Error('Delete fail (' + res.status + ')');
-    }
-    async function loadGallery() {
-      const res = await fetch('api/gallery?space=' + encodeURIComponent(SPACE), { cache: 'no-store' });
-      if (!res.ok) throw new Error('Load fail (' + res.status + ')');
-      return res.json();
+    // ================= BOOT (after login) =================
+    function boot() {
+      $('#ttl').textContent = r(EDITION.title);
+      initCollage();
+      initGreeting();
+      initQuestions();
     }
 
-    // path helpers (the server validates these too)
+    // ---------------- Collage media ----------------
+    const say = (txt, bad) => { const el = $('#mmsg'); el.textContent = txt; el.style.color = bad ? 'var(--sin)' : 'var(--leaf)'; };
     const photoPath = (id, ext) => `${SPACE}/media/photos/${id}.${ext}`;
     const photoMeta = (id) => `${SPACE}/media/photos/${id}.json`;
     const videoPath = (id, ext) => `${SPACE}/media/videos/${id}.${ext}`;
@@ -369,101 +204,197 @@
       return `<div class="mcard" data-kind="${kind}" data-id="${esc(it.id)}" data-ext="${esc(it.ext)}" data-order="${it.order != null ? esc(String(it.order)) : ''}">
         ${thumb}
         <div class="body">
-          <textarea class="cap" placeholder="Caption / kis se mili">${esc(it.caption || '')}</textarea>
+          <textarea class="cap" placeholder="Caption / who it's from">${esc(it.caption || '')}</textarea>
           <div class="mrow"><span class="st"></span><span><button class="save">Save</button> <button class="del">Delete</button></span></div>
         </div>
       </div>`;
     }
-
     function wireCard(el) {
       const kind = el.dataset.kind, id = el.dataset.id, ext = el.dataset.ext;
       const st = el.querySelector('.st');
       el.querySelector('.save').addEventListener('click', async () => {
-        if (!ensureKey()) return;
         st.textContent = 'saving…';
-        // Preserve the item's existing sort order (the sidecar is overwritten
-        // wholesale, so we must re-send it or the collage would reshuffle).
         const prevOrder = el.dataset.order !== '' ? Number(el.dataset.order) : Date.now();
         const meta = { caption: el.querySelector('.cap').value.trim(), order: prevOrder, updatedAt: Date.now() };
-        try {
-          await apiPut(kind === 'photo' ? photoMeta(id) : videoMeta(id), JSON.stringify(meta), 'application/json');
-          el.dataset.order = String(prevOrder);
-          st.textContent = 'saved';
-        } catch (e) { st.textContent = e.message; }
+        try { await apiPut(kind === 'photo' ? photoMeta(id) : videoMeta(id), JSON.stringify(meta), 'application/json'); el.dataset.order = String(prevOrder); st.textContent = 'saved'; }
+        catch (e) { st.textContent = e.message; }
       });
       el.querySelector('.del').addEventListener('click', async () => {
-        if (!ensureKey()) return;
-        if (!confirm('Pakka delete karein?')) return;
+        if (!confirm('Delete for sure?')) return;
         st.textContent = 'deleting…';
-        try {
-          await apiDelete(kind === 'photo' ? photoPath(id, ext) : videoPath(id, ext));
-          await apiDelete(kind === 'photo' ? photoMeta(id) : videoMeta(id)).catch(() => {});
-          el.remove();
-        } catch (e) { st.textContent = e.message; }
+        try { await apiDelete(kind === 'photo' ? photoPath(id, ext) : videoPath(id, ext)); await apiDelete(kind === 'photo' ? photoMeta(id) : videoMeta(id)).catch(() => {}); el.remove(); }
+        catch (e) { st.textContent = e.message; }
       });
     }
-
     function renderGallery(data) {
       const pg = $('#pgrid'), vg = $('#vgrid');
-      pg.innerHTML = (data.photos || []).map((it) => cardHTML('photo', it)).join('') || '<p class="muted">Abhi koi photo nahi.</p>';
-      vg.innerHTML = (data.videos || []).map((it) => cardHTML('video', it)).join('') || '<p class="muted">Abhi koi recording nahi.</p>';
+      pg.innerHTML = (data.photos || []).map((it) => cardHTML('photo', it)).join('') || '<p class="muted">No photos yet.</p>';
+      vg.innerHTML = (data.videos || []).map((it) => cardHTML('video', it)).join('') || '<p class="muted">No videos yet.</p>';
       pg.querySelectorAll('.mcard').forEach(wireCard);
       vg.querySelectorAll('.mcard').forEach(wireCard);
     }
-
     async function refreshGallery() {
-      try { renderGallery(await loadGallery()); say('Album load ho gaya'); }
+      try { const data = await loadGallery(); renderGallery(data); renderGreeting(data.config && data.config.greetingVideo); }
       catch (e) { say(e.message, true); }
     }
-
     async function uploadFiles(files, kind) {
-      if (!ensureKey()) { say('Admin key daaliye', true); return; }
       const prog = $(kind === 'photo' ? '#pprog' : '#vprog');
-      const bar = prog.querySelector('i');
-      prog.hidden = false; bar.style.width = '0';
+      const bar = prog.querySelector('i'); prog.hidden = false; bar.style.width = '0';
       const list = [...files];
       for (let i = 0; i < list.length; i++) {
         const f = list[i];
         const ext = extOf(f.name, f.type);
-        const okPhoto = IMG_EXT.includes(ext);
-        const okVideo = VID_EXT.includes(ext) || AUD_EXT.includes(ext);
-        if (kind === 'photo' && !okPhoto) { say(f.name + ': photo nahi', true); continue; }
-        if (kind === 'video' && !okVideo) { say(f.name + ': video/audio nahi', true); continue; }
-        // Keep the file's real extension (the server allows mp3/ogg/wav/aac under
-        // videos/ too). Only an unknown ext falls back to m4a so the path is valid.
+        const okPhoto = IMG_EXT.includes(ext), okVideo = VID_EXT.includes(ext) || AUD_EXT.includes(ext);
+        if (kind === 'photo' && !okPhoto) { say(f.name + ': not a photo', true); continue; }
+        if (kind === 'video' && !okVideo) { say(f.name + ': not a video/audio', true); continue; }
         const useExt = (kind === 'video' && ext === 'bin') ? 'm4a' : ext;
         const id = slug(f.name.replace(/\.[^.]+$/, '')) + '-' + Date.now().toString(36) + '-' + i;
         const path = kind === 'photo' ? photoPath(id, useExt) : videoPath(id, useExt);
         say('Uploading ' + (i + 1) + '/' + list.length + ' — ' + f.name);
         try {
           await apiPut(path, f, f.type);
-          // sidecar caption from filename so it isn't blank
           const cap = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
           await apiPut(kind === 'photo' ? photoMeta(id) : videoMeta(id), JSON.stringify({ caption: cap, order: Date.now(), updatedAt: Date.now() }), 'application/json').catch(() => {});
         } catch (e) { say(f.name + ': ' + e.message, true); }
         bar.style.width = Math.round(((i + 1) / list.length) * 100) + '%';
       }
       setTimeout(() => (prog.hidden = true), 600);
-      say('Upload ho gaya');
+      say('Upload complete'); refreshGallery();
+    }
+    function initCollage() {
+      $('#pfile').addEventListener('change', (e) => uploadFiles(e.target.files, 'photo'));
+      $('#vfile').addEventListener('change', (e) => uploadFiles(e.target.files, 'video'));
+      [['#pdrop', 'photo'], ['#vdrop', 'video']].forEach(([sel, kind]) => {
+        const d = $(sel);
+        ['dragenter', 'dragover'].forEach((ev) => d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.add('over'); }));
+        ['dragleave', 'drop'].forEach((ev) => d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.remove('over'); }));
+        d.addEventListener('drop', (e) => { if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files, kind); });
+      });
       refreshGallery();
     }
 
-    $('#mkey').addEventListener('input', ensureKey);
-    $('#mload').addEventListener('click', () => { ensureKey(); refreshGallery(); });
-    $('#pfile').addEventListener('change', (e) => uploadFiles(e.target.files, 'photo'));
-    $('#vfile').addEventListener('change', (e) => uploadFiles(e.target.files, 'video'));
-
-    // drag & drop
-    [['#pdrop', 'photo'], ['#vdrop', 'video']].forEach(([sel, kind]) => {
-      const d = $(sel);
+    // ---------------- Greeting video ----------------
+    const greetPath = (ext) => `${SPACE}/config/greeting-video.${ext}`;
+    const greetMeta = () => `${SPACE}/config/greeting-video.json`;
+    function renderGreeting(gv) {
+      const box = $('#gcur');
+      if (!gv || !gv.url) { box.innerHTML = '<p class="muted">No greeting video yet.</p>'; return; }
+      box.innerHTML = `<div class="mcard" style="max-width:320px;margin-top:12px">
+        <video class="thumb" src="${esc(gv.url)}" controls preload="metadata" style="aspect-ratio:16/10"></video>
+        <div class="body"><div class="mrow"><span class="st"></span><button class="del">Delete</button></div></div>
+      </div>`;
+      box.querySelector('.del').addEventListener('click', async () => {
+        if (!confirm('Delete the greeting video?')) return;
+        try { await apiDelete(greetPath(gv.ext)); await apiDelete(greetMeta()).catch(() => {}); renderGreeting(null); }
+        catch (e) { box.querySelector('.st').textContent = e.message; }
+      });
+    }
+    async function uploadGreeting(file) {
+      const ext = extOf(file.name, file.type);
+      if (!VID_EXT.includes(ext)) { say('Greeting must be a video', true); return; }
+      const prog = $('#gprog'), bar = prog.querySelector('i'); prog.hidden = false; bar.style.width = '30%';
+      try {
+        // remove any previous greeting of a different extension so only one remains
+        for (const old of VID_EXT) { if (old !== ext) await apiDelete(greetPath(old)).catch(() => {}); }
+        await apiPut(greetPath(ext), file, file.type); bar.style.width = '80%';
+        await apiPut(greetMeta(), JSON.stringify({ caption: file.name.replace(/\.[^.]+$/, ''), updatedAt: Date.now() }), 'application/json').catch(() => {});
+        bar.style.width = '100%'; say('Greeting video uploaded');
+      } catch (e) { say(e.message, true); }
+      setTimeout(() => (prog.hidden = true), 600);
+      refreshGallery();
+    }
+    function initGreeting() {
+      $('#gfile').addEventListener('change', (e) => { if (e.target.files[0]) uploadGreeting(e.target.files[0]); });
+      const d = $('#gdrop');
       ['dragenter', 'dragover'].forEach((ev) => d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.add('over'); }));
       ['dragleave', 'drop'].forEach((ev) => d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.remove('over'); }));
-      d.addEventListener('drop', (e) => { if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files, kind); });
-    });
+      d.addEventListener('drop', (e) => { if (e.dataTransfer.files[0]) uploadGreeting(e.dataTransfer.files[0]); });
+    }
 
-    ensureKey();
-    // auto-load the public gallery view (read needs no key)
-    refreshGallery();
+    // ---------------- Questions editor ----------------
+    // We edit prompt/sub text and an enabled flag, saved as an overrides map
+    // keyed by question key, to <space>/config/questions.json. The app merges
+    // these over content.js at load. content.js stays the source fallback.
+    let overrides = {};     // key -> { prompt?, sub?, enabled? }
+    const allQ = [];        // flattened [{chapter, chapterTitle, q}]
+    CHAPTERS.forEach((c) => (QUESTIONS[c.key] || []).forEach((q) => allQ.push({ chapter: c.key, chapterTitle: r(c.title), number: c.number, q })));
+
+    async function loadOverrides() {
+      try { const data = await loadGallery(); overrides = (data.config && data.config.questions) || {}; }
+      catch (e) { overrides = {}; }
+    }
+    function effective(q) {
+      const o = overrides[q.key] || {};
+      return {
+        prompt: o.prompt != null ? o.prompt : r(q.prompt || ''),
+        sub: o.sub != null ? o.sub : r(q.sub || ''),
+        enabled: o.enabled != null ? o.enabled : (q.enabled !== false)
+      };
+    }
+    function drawQuestions() {
+      const term = ($('#qsearch').value || '').trim().toLowerCase();
+      let html = '', n = 0, lastChap = '';
+      allQ.forEach(({ chapter, chapterTitle, number, q }) => {
+        const eff = effective(q);
+        const hay = (q.key + ' ' + eff.prompt + ' ' + eff.sub).toLowerCase();
+        if (term && !hay.includes(term)) return;
+        if (chapter !== lastChap) { html += `<div class="qchap">Chapter ${number} · ${esc(chapterTitle)}</div>`; lastChap = chapter; }
+        n++;
+        html += `<div class="qcard ${eff.enabled ? '' : 'off'}" data-key="${esc(q.key)}">
+          <div class="qkey">${esc(q.key)}</div>
+          <label class="muted">Question text (shown to Mamma)
+            <textarea class="qprompt">${esc(eff.prompt)}</textarea></label>
+          <label class="muted">Hint / sub-text (optional)
+            <textarea class="qsub" style="min-height:40px">${esc(eff.sub)}</textarea></label>
+          <div class="qrow">
+            <label><input type="checkbox" class="qon" ${eff.enabled ? 'checked' : ''}> Show this question</label>
+            ${overrides[q.key] ? '<span class="pill">edited</span>' : ''}
+          </div>
+        </div>`;
+      });
+      $('#qlist').innerHTML = html || '<p class="muted">No questions match.</p>';
+      $('#qcount').textContent = n + ' questions';
+      $('#qlist').querySelectorAll('.qcard').forEach((card) => {
+        card.querySelector('.qon').addEventListener('change', (e) => card.classList.toggle('off', !e.target.checked));
+      });
+    }
+    function collectOverrides() {
+      const map = {};
+      $('#qlist').querySelectorAll('.qcard').forEach((card) => {
+        const key = card.dataset.key;
+        const src = allQ.find((x) => x.q.key === key);
+        if (!src) return;
+        const origPrompt = r(src.q.prompt || ''), origSub = r(src.q.sub || ''), origEnabled = src.q.enabled !== false;
+        const prompt = card.querySelector('.qprompt').value.trim();
+        const sub = card.querySelector('.qsub').value.trim();
+        const enabled = card.querySelector('.qon').checked;
+        const o = {};
+        if (prompt !== origPrompt) o.prompt = prompt;
+        if (sub !== origSub) o.sub = sub;
+        if (enabled !== origEnabled) o.enabled = enabled;
+        if (Object.keys(o).length) map[key] = o;
+      });
+      // keep any override for a key not currently rendered (e.g. filtered out)
+      Object.keys(overrides).forEach((k) => { if (!(k in map) && !$(`.qcard[data-key="${CSS.escape(k)}"]`)) map[k] = overrides[k]; });
+      return map;
+    }
+    function initQuestions() {
+      loadOverrides().then(drawQuestions);
+      $('#qsearch').addEventListener('input', drawQuestions);
+      $('#qsave').addEventListener('click', async () => {
+        const msg = $('#qmsg'); msg.textContent = 'saving…';
+        overrides = collectOverrides();
+        try { await apiPut(`${SPACE}/config/questions.json`, JSON.stringify(overrides), 'application/json'); msg.textContent = 'Saved · the app will show these'; drawQuestions(); }
+        catch (e) { msg.textContent = e.message; }
+      });
+      $('#qreset').addEventListener('click', async () => {
+        if (!confirm('Reset ALL questions to their original wording and visibility?')) return;
+        const msg = $('#qmsg'); msg.textContent = 'resetting…';
+        overrides = {};
+        try { await apiPut(`${SPACE}/config/questions.json`, JSON.stringify({}), 'application/json'); msg.textContent = 'Reset to original'; drawQuestions(); }
+        catch (e) { msg.textContent = e.message; }
+      });
+    }
   })();
   </script>
 </body>

@@ -220,6 +220,22 @@
     .filter((q) => SS.questionStatus(q).visible);
   SS.findQuestion = (key) => SS.allQuestions().find((q) => q.key === key);
   SS.weight = (q) => q.weight || 'light';
+
+  // Apply question overrides saved from admin (prompt/sub/enabled), keyed by
+  // question key. content.js remains the fallback: an override only replaces the
+  // fields it sets. Called once at boot before the first render.
+  SS.applyQuestionOverrides = (map) => {
+    if (!map || typeof map !== 'object') return;
+    for (const list of Object.values(QUESTIONS)) {
+      for (const q of list) {
+        const o = map[q.key];
+        if (!o) continue;
+        if (o.prompt != null) q.prompt = o.prompt;
+        if (o.sub != null) q.sub = o.sub;
+        if (o.enabled != null) q.enabled = !!o.enabled;
+      }
+    }
+  };
   SS.isSealable = (q) => !!q.sealedDefault || q.chapter === 'chitthiyan';
 
   SS.askedByLine = function (askedBy) {

@@ -22,6 +22,82 @@
   let cleanup = [];
   const onLeave = (fn) => cleanup.push(fn);
   let lastRoute = '';
+  // Greeting video uploaded from admin (filled at boot from /api/gallery config).
+  let GREETING_VIDEO = null;
+
+  // ------------------------------------------------------------------
+  // Background music (birthday song) — lives OUTSIDE the route lifecycle so it
+  // keeps playing as she moves through the book. A floating mute button (top
+  // right) lets her silence it. Mute choice is remembered on the device.
+  // ------------------------------------------------------------------
+  const BGM = (function () {
+    let el = null, started = false, btn = null;
+    const cfg = () => (EDITION.settings.reveal && EDITION.settings.reveal.cake && EDITION.settings.reveal.cake.song) || null;
+    const isMuted = () => SS.ls.get('bgmMuted', false);
+
+    function ensureButton() {
+      if (btn) return btn;
+      btn = document.createElement('button');
+      btn.id = 'bgm-toggle';
+      btn.type = 'button';
+      btn.className = 'bgm-toggle';
+      btn.hidden = true; // shown once the song starts
+      document.body.appendChild(btn);
+      btn.addEventListener('click', () => setMuted(!isMuted()));
+      paintButton();
+      return btn;
+    }
+    function paintButton() {
+      if (!btn) return;
+      const muted = isMuted();
+      btn.setAttribute('aria-pressed', String(muted));
+      btn.setAttribute('aria-label', muted ? t('bgm.unmute') : t('bgm.mute'));
+      btn.title = muted ? t('bgm.unmute') : t('bgm.mute');
+      btn.innerHTML = muted ? MOTIF.speakerOff() : MOTIF.speakerOn();
+    }
+    function setMuted(m) {
+      SS.ls.set('bgmMuted', m);
+      if (el) { el.muted = m; if (!m && el.paused && started) el.play().catch(() => {}); }
+      paintButton();
+    }
+    function start() {
+      const c = cfg();
+      if (!c || !c.src || started) { if (started) show(); return; }
+      started = true;
+      const startAt = Number(c.startAt) || 0;
+      try {
+        el = new Audio(c.src);
+        el.loop = true;              // keep the moment going in the background
+        el.preload = 'auto';
+        el.muted = isMuted();
+        // Seek to the start offset as soon as we can (before and after metadata).
+        const seek = () => { try { if (el.currentTime < startAt) el.currentTime = startAt; } catch (e) { /* */ } };
+        el.addEventListener('loadedmetadata', seek, { once: true });
+        // CRITICAL: call play() synchronously here. start() runs inside the
+        // tap that reaches the cake, so this counts as a user gesture. Calling
+        // play() later (e.g. in a 'canplay' handler) escapes the gesture and
+        // the browser blocks it — which is why no sound played before.
+        const pr = el.play();
+        if (pr && pr.then) pr.then(seek).catch(() => {
+          // Blocked anyway? Try once more on the next real interaction.
+          const retry = () => { el.play().then(seek).catch(() => {}); document.removeEventListener('pointerdown', retry); };
+          document.addEventListener('pointerdown', retry, { once: true });
+        });
+        // on loop, jump back to the offset rather than 0
+        el.addEventListener('timeupdate', () => { if (el.loop && startAt && el.currentTime < 0.3) seek(); });
+      } catch (e) { /* no song, no problem */ }
+      ensureButton();
+      show();
+    }
+    function show() { ensureButton(); btn.hidden = false; paintButton(); }
+    // keep playing when tab regains focus (iate autoplay already unlocked by then)
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && el && started && !isMuted() && el.paused) el.play().catch(() => {});
+      });
+    }
+    return { start, setMuted, isMuted };
+  })();
 
   // ------------------------------------------------------------------
   // Router
@@ -449,7 +525,7 @@
     async function beat3() {
       const lines = INTRO.lines.map((l) => r(l));
       $rv.innerHTML = `<div style="margin-bottom:20px">${MOTIF.diya('lit')}</div>
-        ${lines.map((l) => `<p class="hand-line">${esc(l)}</p>`).join('')}${skip()}`;
+        ${lines.map((l) => `<p class="hand-line hand-line--title">${esc(l)}</p>`).join('')}${skip()}`;
       $rv.querySelector('[data-skip]').addEventListener('click', beat4, { once: true });
       if (INTRO.voice) SS.player.play([INTRO.voice], {});
       const els = $rv.querySelectorAll('.hand-line');
@@ -471,10 +547,10 @@
     function beat4() {
       if (!alive) return;
       SS.player.stop();
+      BGM.start(); // birthday song starts here and keeps playing across pages
       const names = rv.candles.map((k) => SS.callName(k) || k);
       $rv.innerHTML = `
         <button class="diya-btn" id="cake" style="border-radius:12px;width:100%" aria-label="${esc(t('reveal.blowTap'))}">${MOTIF.cake(names)}</button>
-        <div class="candle-names hand" aria-hidden="true">${names.map((n) => `<span>${esc(n)}</span>`).join('')}</div>
         <p class="big-title" style="margin-top:24px">${esc(t('reveal.blow'))}</p>
         <div class="blow-meter" hidden><i></i></div>
         <p class="muted" id="blowhint" aria-live="polite" style="min-height:1.6em;margin:10px 0 0"></p>
@@ -673,10 +749,14 @@
   // ------------------------------------------------------------------
   function wall() {
     const list = UI.greetings('wall');
+    const gv = GREETING_VIDEO && GREETING_VIDEO.url
+      ? `<figure class="greet-video"><video src="${esc(GREETING_VIDEO.url)}" controls playsinline preload="metadata"></video>${GREETING_VIDEO.caption ? `<figcaption class="hand">${esc(GREETING_VIDEO.caption)}</figcaption>` : ''}</figure>`
+      : '';
     render(`<main class="screen">
       <div class="topbar"><a class="iconbtn" href="#/kitaab" aria-label="${esc(t('chapter.back'))}">${MOTIF.back()}</a><span class="label"></span></div>
       <div class="wall-title"><h1 class="big-title">${esc(t('wall.title'))}</h1></div>
-      ${list.length ? list.map(UI.greetingCard).join('') : `<p class="muted" style="text-align:center">${esc(t('wall.empty'))}</p>`}
+      ${gv}
+      ${list.length ? list.map(UI.greetingCard).join('') : (gv ? '' : `<p class="muted" style="text-align:center">${esc(t('wall.empty'))}</p>`)}
       <div style="height:16px"></div>
       <p class="hand-line on" style="text-align:center">${esc(t('wall.next'))}</p>
       <a class="btn" href="#/tohfa" style="margin-top:12px">${esc(t('reveal.next'))} →</a>
@@ -1591,6 +1671,15 @@
       document.body.appendChild(b);
     }
     try { await SS.recoverRecordings(); } catch (e) { console.warn('recover failed', e); }
+    // Pull question overrides + greeting video from the cloud (best-effort) and
+    // apply them before the first render, so edits from admin show up.
+    try {
+      const data = await fetchGallery(true);
+      if (data && data.config) {
+        SS.applyQuestionOverrides(data.config.questions);
+        if (data.config.greetingVideo) GREETING_VIDEO = data.config.greetingVideo;
+      }
+    } catch (e) { /* offline or no backend: use content.js as-is */ }
     SS.backup.kick(); // push anything that didn't make it up last time
     route();
   }

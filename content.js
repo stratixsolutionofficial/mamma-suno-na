@@ -37,7 +37,9 @@ const EDITION = {
       // true  = plays only once on a phone, then always opens the album
       playOncePerDevice: false,
       diyaIntro: true,
-      cake: { enabled: true, blowToExtinguish: true },
+      // Birthday song that plays when the cake appears (reveal beat 4).
+      // src = file (root or a folder); startAt = seconds to start from.
+      cake: { enabled: true, blowToExtinguish: true, song: { src: "happy_birthday.mp3", startAt: 31 } },
       // 5 candles = aapka ghar
       candles: ["papaji", "sunny", "gunjan", "mickey", "mamma"],
       montage: { enabled: true, maxSeconds: 90 },
@@ -211,7 +213,7 @@ const PHOTOS = {
 // ---------------------------------------------------------------------
 const INTRO = {
   voice: "",                            // e.g. "audio/intro.m4a" (Sunny + Mickey + Gunjan, 10-20s)
-  lines: ["Happy Birthday {{addressWord}}!", "Ye aapke liye hai…"],
+  lines: ["Happy Birthday {{addressWord}}!"],
   tohfaVoice: "",                       // optional: Sunny reading the letter, e.g. "audio/tohfa.m4a"
   tohfaLetter: `{{addressWord}},
 Aapne hamesha humari kahaniyan suni. Ab humari baari hai sunne ki.
@@ -280,7 +282,7 @@ const GREETINGS = [
 const COPY = {
   "gate.countdown": ["Kuch khaas aapka intezaar kar raha hai…", "कुछ ख़ास आपका इंतज़ार कर रहा है…"],
   "gate.days": ["din", "दिन"], "gate.hours": ["ghante", "घंटे"], "gate.mins": ["minute", "मिनट"],
-  "pin.title": ["Apna khaas number daaliye", "अपना ख़ास नंबर डालिए"],
+  "pin.title": ["Enter PIN", "Enter PIN"],
   "pin.wrong": ["Ek baar phir try kijiye", "एक बार फिर ट्राई कीजिए"],
   "pin.locked": ["Thodi der baad try kijiye, ya {{helpLabel}} ko call kar lijiye"],
   "pin.clear": ["Clear"],
@@ -387,6 +389,8 @@ const COPY = {
   "menu.help": ["Need help? Call {{helpLabel}}"],
   "menu.share": ["Send a copy to the kids"],
   "menu.close": ["Close"],
+  "bgm.mute": ["Mute music", "संगीत बंद करें"],
+  "bgm.unmute": ["Play music", "संगीत चलाएँ"],
   "gallery.loading": ["Khul raha hai…", "खुल रहा है…"],
   "gallery.offline": ["Abhi load nahi ho paaya. Net check karke phir dekhiye.", "अभी लोड नहीं हो पाया। नेट जाँच कर फिर देखिए।"],
   "gallery.photos.title": ["Tasveerein", "तस्वीरें"],

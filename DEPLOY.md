@@ -47,42 +47,57 @@ You get a URL like `https://mamma-sunao-na.xxxx.vercel.app`.
 - Reader-from-file page `padho.html` still works for the WhatsApp JSON export,
   independently of the cloud backup.
 
-## Photos (collage) & recordings from other people
+## Admin panel (`/admin.html`)
 
-You upload these yourself from the **admin panel** (`/admin.html` → "Album ·
-Tasveerein aur Aawaazein"). They go to **your** Vercel Blob store and show up in
-the app for Mamma and the family.
+The admin panel is **password-protected**: opening it shows a login box, and you
+enter your `ADMIN_SECRET` (the same env var from step 3). The password is checked
+against the server (`/api/admin-check`) and remembered only for that browser tab.
+Every upload is also gated server-side, so the secret guards both the page and
+the writes.
 
-1. Open `/admin.html` and scroll to the **Album** section (or use the "Album"
-   link in the top nav).
-2. Enter your **admin key** — the same `ADMIN_SECRET` you set in step 3 above.
-   It is remembered only for that browser tab (sessionStorage).
-3. Drop (or pick) photos under **Photos** and video/voice clips under
-   **Recordings**. Each upload goes straight to Blob with the admin key in an
-   `x-admin-key` header; a visitor without the key cannot upload.
-4. Add a caption per item and press **Save**, or **Delete** to remove one.
+The panel has three things:
 
-Where it shows in Mamma's app (both are in the contents list and the menu):
+1. **Collage · Photos & Videos** — drop/pick photos (shown in the app at
+   `…/#/tasveerein`) and videos/recordings (shown at `…/#/aawaazein`). Add a
+   caption per item, Save, or Delete.
+2. **Greeting video** — upload one birthday greeting video. Uploading a new one
+   replaces the old. It appears in the app's greetings page (`…/#/shubhkamnayein`).
+3. **Questions** — edit the text shown to Mamma, or turn a question off. Saved to
+   the cloud and picked up by the app automatically; `content.js` stays the
+   fallback. "Reset to original" clears all edits.
 
-- **Tasveerein** — `…/#/tasveerein` — a photo collage.
-- **Aawaazein** — `…/#/aawaazein` — the gathered video/voice recordings.
-
-These pages sit behind the app's PIN (like every other page), so only someone
+These app pages sit behind the app's PIN (like every other page), so only someone
 with the link + PIN sees them; the media URLs themselves are public but
-unguessable. The listing (`/api/gallery`) is public read; uploading/deleting
-media requires the admin key.
+unguessable. The listing (`/api/gallery`) is public read; all writes need the key.
 
-Layout in Blob for media:
+Layout in Blob:
 
 ```
 <space>/media/photos/<id>.<jpg|png|webp|gif>   a collage photo
 <space>/media/photos/<id>.json                 { caption, order, … }
-<space>/media/videos/<id>.<mp4|webm|mov|m4a|…> a recording (video or audio)
+<space>/media/videos/<id>.<mp4|webm|mov|m4a|…> a collage video / recording
 <space>/media/videos/<id>.json                 { caption, order, … }
+<space>/config/questions.json                  { "<question.key>": { prompt?, sub?, enabled? } }
+<space>/config/greeting-video.<mp4|webm|mov|m4v>  the greeting video
+<space>/config/greeting-video.json             { caption }
 ```
 
 Each media upload is capped at 200 MB (fine for a short phone video). Longer
 videos are better linked than uploaded.
+
+## Local testing (optional, before deploying)
+
+`dev-server.mjs` fakes Vercel Blob on disk so you can test the whole flow
+offline:
+
+```bash
+ADMIN_SECRET=test123 node dev-server.mjs
+# App:   http://localhost:3000/            (PIN from content.js)
+# Admin: http://localhost:3000/admin.html  (password: test123)
+```
+
+Uploads land in `./.localblob` (gitignored); delete it to reset. The JSON shapes
+and auth rules match the real `api/*.js`, so what works here works on Vercel.
 
 ## How it stores things
 

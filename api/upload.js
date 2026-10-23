@@ -26,12 +26,15 @@ export const config = { runtime: 'nodejs', api: { bodyParser: false } };
 //   "<space>/answers/*.json" or "<space>/audio/*.(webm|m4a)"
 const SAFE_APP = /^[A-Za-z0-9][A-Za-z0-9._-]*\/(answers\/[A-Za-z0-9._-]+\.json|audio\/[A-Za-z0-9._-]+\.(webm|m4a))$/;
 
-// Admin (with secret) may write the album media:
+// Admin (with secret) may write the album media and config:
 //   "<space>/media/photos/*.(jpg|jpeg|png|webp|gif)"
 //   "<space>/media/videos/*.(mp4|webm|mov|m4v)"  video, or
 //   "<space>/media/videos/*.(m4a|mp3|ogg|wav|aac)" an audio recording, or
 //   "<space>/media/(photos|videos)/*.json"   (caption sidecar / manifest)
-const SAFE_MEDIA = /^[A-Za-z0-9][A-Za-z0-9._-]*\/media\/(photos\/[A-Za-z0-9._-]+\.(jpe?g|png|webp|gif|json)|videos\/[A-Za-z0-9._-]+\.(mp4|webm|mov|m4v|m4a|mp3|ogg|wav|aac|json))$/i;
+//   "<space>/config/questions.json"          (question overrides from admin)
+//   "<space>/config/greeting-video.(mp4|webm|mov|m4v)"  the greeting video
+//   "<space>/config/greeting-video.json"     (greeting video caption)
+const SAFE_MEDIA = /^[A-Za-z0-9][A-Za-z0-9._-]*\/(media\/(photos\/[A-Za-z0-9._-]+\.(jpe?g|png|webp|gif|json)|videos\/[A-Za-z0-9._-]+\.(mp4|webm|mov|m4v|m4a|mp3|ogg|wav|aac|json))|config\/(questions\.json|greeting-video\.(mp4|webm|mov|m4v|json)))$/i;
 
 function adminOk(given) {
   const want = process.env.ADMIN_SECRET || '';

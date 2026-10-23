@@ -70,18 +70,40 @@ async function collect(prefix) {
   }));
 }
 
+// Read the config area: question overrides (JSON) and the greeting video.
+async function readConfig(space) {
+  const out = { questions: null, greetingVideo: null };
+  try {
+    const { blobs } = await list({ prefix: space + '/config/', limit: 100 });
+    let greetingMeta = null, greetingFile = null;
+    for (const b of blobs) {
+      const file = (b.pathname.split('/').pop() || '').toLowerCase();
+      if (file === 'questions.json') {
+        try { const r = await fetch(b.url, { cache: 'no-store' }); if (r.ok) out.questions = await r.json(); } catch (e) {}
+      } else if (file === 'greeting-video.json') {
+        try { const r = await fetch(b.url, { cache: 'no-store' }); if (r.ok) greetingMeta = await r.json(); } catch (e) {}
+      } else if (/^greeting-video\.(mp4|webm|mov|m4v)$/i.test(file)) {
+        greetingFile = { url: b.url, ext: file.split('.').pop().toLowerCase() };
+      }
+    }
+    if (greetingFile) out.greetingVideo = { url: greetingFile.url, ext: greetingFile.ext, caption: (greetingMeta && greetingMeta.caption) || '' };
+  } catch (e) { /* no config yet */ }
+  return out;
+}
+
 export default async function handler(req, res) {
   const url = new URL(req.url, 'http://x');
   const space = url.searchParams.get('space') || '';
   if (!SAFE_SPACE.test(space)) return res.status(400).json({ error: 'bad space' });
 
   try {
-    const [photos, videos] = await Promise.all([
+    const [photos, videos, config] = await Promise.all([
       collect(space + '/media/photos/'),
-      collect(space + '/media/videos/')
+      collect(space + '/media/videos/'),
+      readConfig(space)
     ]);
     res.setHeader('cache-control', 'no-store');
-    return res.status(200).json({ space, photos, videos });
+    return res.status(200).json({ space, photos, videos, config });
   } catch (e) {
     return res.status(500).json({ error: String((e && e.message) || e) });
   }
