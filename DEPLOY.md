@@ -47,6 +47,43 @@ You get a URL like `https://mamma-sunao-na.xxxx.vercel.app`.
 - Reader-from-file page `padho.html` still works for the WhatsApp JSON export,
   independently of the cloud backup.
 
+## Photos (collage) & recordings from other people
+
+You upload these yourself from the **admin panel** (`/admin.html` → "Album ·
+Tasveerein aur Aawaazein"). They go to **your** Vercel Blob store and show up in
+the app for Mamma and the family.
+
+1. Open `/admin.html` and scroll to the **Album** section (or use the "Album"
+   link in the top nav).
+2. Enter your **admin key** — the same `ADMIN_SECRET` you set in step 3 above.
+   It is remembered only for that browser tab (sessionStorage).
+3. Drop (or pick) photos under **Photos** and video/voice clips under
+   **Recordings**. Each upload goes straight to Blob with the admin key in an
+   `x-admin-key` header; a visitor without the key cannot upload.
+4. Add a caption per item and press **Save**, or **Delete** to remove one.
+
+Where it shows in Mamma's app (both are in the contents list and the menu):
+
+- **Tasveerein** — `…/#/tasveerein` — a photo collage.
+- **Aawaazein** — `…/#/aawaazein` — the gathered video/voice recordings.
+
+These pages sit behind the app's PIN (like every other page), so only someone
+with the link + PIN sees them; the media URLs themselves are public but
+unguessable. The listing (`/api/gallery`) is public read; uploading/deleting
+media requires the admin key.
+
+Layout in Blob for media:
+
+```
+<space>/media/photos/<id>.<jpg|png|webp|gif>   a collage photo
+<space>/media/photos/<id>.json                 { caption, order, … }
+<space>/media/videos/<id>.<mp4|webm|mov|m4a|…> a recording (video or audio)
+<space>/media/videos/<id>.json                 { caption, order, … }
+```
+
+Each media upload is capped at 200 MB (fine for a short phone video). Longer
+videos are better linked than uploaded.
+
 ## How it stores things
 
 For the edition folder `settings.backup.space` in `content.js`

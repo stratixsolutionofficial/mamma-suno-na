@@ -43,12 +43,27 @@
     .gprev { border: 1px solid var(--edge); border-radius: 8px; padding: 12px; margin: 10px 0; }
     .gprev img { width: 90px; height: 90px; object-fit: cover; border-radius: 6px; margin: 4px; }
     .copied { color: var(--leaf); font-weight: 600; margin-left: 8px; }
+    .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
+    .mcard { border: 1px solid var(--edge); border-radius: 10px; overflow: hidden; background: #FFFBF3; display: flex; flex-direction: column; }
+    .mcard .thumb { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: var(--deep); display: block; }
+    .mcard video.thumb { aspect-ratio: 16 / 10; }
+    .mcard .body { padding: 8px 10px; font-size: 13px; }
+    .mcard .cap { width: 100%; margin: 0 0 6px; min-height: 36px; font-size: 13px; font-family: inherit; }
+    .mcard .mrow { display: flex; gap: 6px; align-items: center; justify-content: space-between; }
+    .mcard .st { font-size: 12px; color: var(--soft); }
+    .mcard button.del { background: var(--sin); color: #fff; padding: 4px 10px; font-size: 12px; }
+    .mcard button.save { background: var(--leaf); color: #fff; padding: 4px 10px; font-size: 12px; }
+    .drop { border: 2px dashed var(--edge); border-radius: 10px; padding: 18px; text-align: center; color: var(--soft); margin: 10px 0; }
+    .drop.over { border-color: var(--mari); background: var(--deep); }
+    .lock-note { background: #FFF3D6; border: 1px solid #F0D48A; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+    .prog { height: 6px; background: var(--deep); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+    .prog > i { display: block; height: 100%; width: 0; background: var(--leaf); transition: width .2s; }
   </style>
 </head>
 <body>
   <header>
     <h1>Parivaar panel · <span id="ttl"></span></h1>
-    <nav><a href="#status">Status</a><a href="#fill">Bharna hai</a><a href="#preview">Preview</a><a href="#greet">Greetings</a><a href="#whatsapp">WhatsApp</a><a href="#questions">Sawaal</a><a href="padho.html">Padho</a></nav>
+    <nav><a href="#status">Status</a><a href="#fill">Bharna hai</a><a href="#media">Album</a><a href="#preview">Preview</a><a href="#greet">Greetings</a><a href="#whatsapp">WhatsApp</a><a href="#questions">Sawaal</a><a href="padho.html">Padho</a></nav>
   </header>
   <main>
     <section id="status"><h2>Status</h2><div class="grid" id="stats"></div>
@@ -60,6 +75,30 @@
       <table><thead><tr><th>Kahan</th><th>Field</th><th>Abhi</th><th></th></tr></thead><tbody id="filltb"></tbody></table>
       <h3>Photo shot list</h3>
       <table><thead><tr><th>ID</th><th>Alt text</th><th>File</th><th></th></tr></thead><tbody id="phtb"></tbody></table>
+    </section>
+
+    <section id="media"><h2>Album · Tasveerein aur Aawaazein</h2>
+      <p class="muted">Yahan se photos (collage ke liye) aur doosron se mili recordings (video/audio) Vercel Blob pe upload hoti hain. App me ye <code>#/tasveerein</code> (collage) aur <code>#/aawaazein</code> (recordings) me dikhti hain. Upload karne ke liye apni <b>admin key</b> (Vercel ka <code>ADMIN_SECRET</code>) chahiye.</p>
+      <p class="lock-note" id="mediaLock" hidden>Admin key daaliye, warna upload/delete kaam nahi karega.</p>
+      <div class="row">
+        <label>Admin key <input type="password" id="mkey" autocomplete="current-password" placeholder="ADMIN_SECRET" size="26"></label>
+        <button class="sec" id="mload">Album load karo</button>
+        <span class="copied" id="mmsg"></span>
+      </div>
+
+      <h3>Photos (collage)</h3>
+      <div class="drop" id="pdrop">Photos yahan drop kijiye, ya chuniye
+        <div style="margin-top:8px"><input type="file" id="pfile" accept="image/*" multiple></div>
+      </div>
+      <div class="prog" id="pprog" hidden><i></i></div>
+      <div class="mgrid" id="pgrid"></div>
+
+      <h3 style="margin-top:22px">Recordings (video / audio — doosron se mili)</h3>
+      <div class="drop" id="vdrop">Video ya audio recordings yahan drop kijiye, ya chuniye
+        <div style="margin-top:8px"><input type="file" id="vfile" accept="video/*,audio/*" multiple></div>
+      </div>
+      <div class="prog" id="vprog" hidden><i></i></div>
+      <div class="mgrid" id="vgrid"></div>
     </section>
 
     <section id="preview"><h2>Preview as Mamma</h2>
@@ -268,6 +307,158 @@
     $('#qsearch').addEventListener('input', drawQuestions);
     $('#onlyhidden').addEventListener('change', drawQuestions);
     drawQuestions();
+
+    // ---------------- Album (photos + recordings) ----------------
+    const SPACE = (EDITION.settings.backup && EDITION.settings.backup.space) || EDITION.slug;
+    const mkey = $('#mkey');
+    mkey.value = sessionStorage.getItem('ss_admin_mkey') || '';
+    mkey.addEventListener('change', () => sessionStorage.setItem('ss_admin_mkey', mkey.value.trim()));
+    const mmsg = $('#mmsg');
+    const say = (txt, bad) => { mmsg.textContent = txt; mmsg.style.color = bad ? 'var(--sin)' : 'var(--leaf)'; };
+    const keyVal = () => mkey.value.trim();
+    const ensureKey = () => { const ok = !!keyVal(); $('#mediaLock').hidden = ok; return ok; };
+
+    const IMG_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    const VID_EXT = ['mp4', 'webm', 'mov', 'm4v'];
+    const AUD_EXT = ['m4a', 'mp3', 'ogg', 'wav', 'aac'];
+    const slug = (s) => (s || 'file').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+    const extOf = (name, mime) => {
+      let e = (name.split('.').pop() || '').toLowerCase();
+      if (IMG_EXT.includes(e) || VID_EXT.includes(e) || AUD_EXT.includes(e)) return e;
+      if (/^image\//.test(mime)) return mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : mime === 'image/gif' ? 'gif' : 'jpg';
+      if (/^video\//.test(mime)) return mime === 'video/webm' ? 'webm' : 'mp4';
+      if (/^audio\//.test(mime)) return 'm4a';
+      return 'bin';
+    };
+
+    async function apiPut(path, body, contentType) {
+      const res = await fetch('api/upload?path=' + encodeURIComponent(path), {
+        method: 'POST',
+        headers: { 'content-type': contentType || 'application/octet-stream', 'x-admin-key': keyVal() },
+        body
+      });
+      if (res.status === 401) throw new Error('Admin key galat hai.');
+      if (!res.ok) throw new Error('Upload fail (' + res.status + ')');
+      return res.json();
+    }
+    async function apiDelete(path) {
+      const res = await fetch('api/upload?path=' + encodeURIComponent(path), {
+        method: 'DELETE', headers: { 'x-admin-key': keyVal() }
+      });
+      if (!res.ok && res.status !== 200) throw new Error('Delete fail (' + res.status + ')');
+    }
+    async function loadGallery() {
+      const res = await fetch('api/gallery?space=' + encodeURIComponent(SPACE), { cache: 'no-store' });
+      if (!res.ok) throw new Error('Load fail (' + res.status + ')');
+      return res.json();
+    }
+
+    // path helpers (the server validates these too)
+    const photoPath = (id, ext) => `${SPACE}/media/photos/${id}.${ext}`;
+    const photoMeta = (id) => `${SPACE}/media/photos/${id}.json`;
+    const videoPath = (id, ext) => `${SPACE}/media/videos/${id}.${ext}`;
+    const videoMeta = (id) => `${SPACE}/media/videos/${id}.json`;
+
+    function cardHTML(kind, it) {
+      const isVid = VID_EXT.includes(it.ext);
+      const thumb = isVid
+        ? `<video class="thumb" src="${esc(it.url)}#t=0.1" muted preload="metadata" controls></video>`
+        : (kind === 'photo'
+          ? `<img class="thumb" src="${esc(it.url)}" alt="${esc(it.caption || '')}">`
+          : `<audio class="thumb" src="${esc(it.url)}" controls style="aspect-ratio:auto;height:44px;width:100%"></audio>`);
+      return `<div class="mcard" data-kind="${kind}" data-id="${esc(it.id)}" data-ext="${esc(it.ext)}">
+        ${thumb}
+        <div class="body">
+          <textarea class="cap" placeholder="Caption / kis se mili">${esc(it.caption || '')}</textarea>
+          <div class="mrow"><span class="st"></span><span><button class="save">Save</button> <button class="del">Delete</button></span></div>
+        </div>
+      </div>`;
+    }
+
+    function wireCard(el) {
+      const kind = el.dataset.kind, id = el.dataset.id, ext = el.dataset.ext;
+      const st = el.querySelector('.st');
+      el.querySelector('.save').addEventListener('click', async () => {
+        if (!ensureKey()) return;
+        st.textContent = 'saving…';
+        const meta = { caption: el.querySelector('.cap').value.trim(), updatedAt: Date.now() };
+        try {
+          await apiPut(kind === 'photo' ? photoMeta(id) : videoMeta(id), JSON.stringify(meta), 'application/json');
+          st.textContent = 'saved';
+        } catch (e) { st.textContent = e.message; }
+      });
+      el.querySelector('.del').addEventListener('click', async () => {
+        if (!ensureKey()) return;
+        if (!confirm('Pakka delete karein?')) return;
+        st.textContent = 'deleting…';
+        try {
+          await apiDelete(kind === 'photo' ? photoPath(id, ext) : videoPath(id, ext));
+          await apiDelete(kind === 'photo' ? photoMeta(id) : videoMeta(id)).catch(() => {});
+          el.remove();
+        } catch (e) { st.textContent = e.message; }
+      });
+    }
+
+    function renderGallery(data) {
+      const pg = $('#pgrid'), vg = $('#vgrid');
+      pg.innerHTML = (data.photos || []).map((it) => cardHTML('photo', it)).join('') || '<p class="muted">Abhi koi photo nahi.</p>';
+      vg.innerHTML = (data.videos || []).map((it) => cardHTML('video', it)).join('') || '<p class="muted">Abhi koi recording nahi.</p>';
+      pg.querySelectorAll('.mcard').forEach(wireCard);
+      vg.querySelectorAll('.mcard').forEach(wireCard);
+    }
+
+    async function refreshGallery() {
+      try { renderGallery(await loadGallery()); say('Album load ho gaya'); }
+      catch (e) { say(e.message, true); }
+    }
+
+    async function uploadFiles(files, kind) {
+      if (!ensureKey()) { say('Admin key daaliye', true); return; }
+      const prog = $(kind === 'photo' ? '#pprog' : '#vprog');
+      const bar = prog.querySelector('i');
+      prog.hidden = false; bar.style.width = '0';
+      const list = [...files];
+      for (let i = 0; i < list.length; i++) {
+        const f = list[i];
+        const ext = extOf(f.name, f.type);
+        const okPhoto = IMG_EXT.includes(ext);
+        const okVideo = VID_EXT.includes(ext) || AUD_EXT.includes(ext);
+        if (kind === 'photo' && !okPhoto) { say(f.name + ': photo nahi', true); continue; }
+        if (kind === 'video' && !okVideo) { say(f.name + ': video/audio nahi', true); continue; }
+        // audio recordings share the videos/ folder but need an allowed ext; map to m4a container name if needed
+        const useExt = (kind === 'video' && AUD_EXT.includes(ext)) ? 'm4a' : ext;
+        const id = slug(f.name.replace(/\.[^.]+$/, '')) + '-' + Date.now().toString(36) + '-' + i;
+        const path = kind === 'photo' ? photoPath(id, useExt) : videoPath(id, useExt);
+        say('Uploading ' + (i + 1) + '/' + list.length + ' — ' + f.name);
+        try {
+          await apiPut(path, f, f.type);
+          // sidecar caption from filename so it isn't blank
+          const cap = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+          await apiPut(kind === 'photo' ? photoMeta(id) : videoMeta(id), JSON.stringify({ caption: cap, order: Date.now(), updatedAt: Date.now() }), 'application/json').catch(() => {});
+        } catch (e) { say(f.name + ': ' + e.message, true); }
+        bar.style.width = Math.round(((i + 1) / list.length) * 100) + '%';
+      }
+      setTimeout(() => (prog.hidden = true), 600);
+      say('Upload ho gaya');
+      refreshGallery();
+    }
+
+    $('#mkey').addEventListener('input', ensureKey);
+    $('#mload').addEventListener('click', () => { ensureKey(); refreshGallery(); });
+    $('#pfile').addEventListener('change', (e) => uploadFiles(e.target.files, 'photo'));
+    $('#vfile').addEventListener('change', (e) => uploadFiles(e.target.files, 'video'));
+
+    // drag & drop
+    [['#pdrop', 'photo'], ['#vdrop', 'video']].forEach(([sel, kind]) => {
+      const d = $(sel);
+      ['dragenter', 'dragover'].forEach((ev) => d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.add('over'); }));
+      ['dragleave', 'drop'].forEach((ev) => d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.remove('over'); }));
+      d.addEventListener('drop', (e) => { if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files, kind); });
+    });
+
+    ensureKey();
+    // auto-load the public gallery view (read needs no key)
+    refreshGallery();
   })();
   </script>
 </body>

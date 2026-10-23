@@ -76,6 +76,8 @@
       case 'pehchaan': return pin();
       case 'janamdin': return reveal();
       case 'shubhkamnayein': return wall();
+      case 'tasveerein': return tasveerein();
+      case 'aawaazein': return aawaazein();
       case 'tohfa': return tohfa();
       case 'kitaab': return cover();
       case 'pehla-panna': return titlePage();
@@ -832,6 +834,8 @@
             <span class="slip-go">${esc(t('album.answer'))} →</span></a>`
           : `<p class="slip slip-done">${esc(t('album.allDone'))}</p>`}
         <ol class="toc">${rows}
+          <li><a class="toc-row" href="#/tasveerein"><span class="toc-line"><span class="toc-title">${esc(t('gallery.photos.title'))}</span><span class="leader" aria-hidden="true"></span><span class="toc-pg">🌼</span></span></a></li>
+          <li><a class="toc-row" href="#/aawaazein"><span class="toc-line"><span class="toc-title">${esc(t('gallery.voices.title'))}</span><span class="leader" aria-hidden="true"></span><span class="toc-pg">🎙️</span></span></a></li>
           <li><a class="toc-row" href="#/antim"><span class="toc-line"><span class="toc-title">${esc(t('book.end'))}</span><span class="leader" aria-hidden="true"></span><span class="toc-pg">${BOOK.num('antim')}</span></span></a></li>
         </ol>
         ${pageFoot('')}
@@ -868,12 +872,99 @@
     </main>`, 'desk');
   }
 
+  // ------------------------------------------------------------------
+  // Album media (photos collage + recordings) — read from /api/gallery.
+  // These are the photos and the voice/video recordings the family uploads
+  // from admin.html. Best-effort: if there's no backend (static hosting) or
+  // nothing uploaded yet, the pages show a gentle empty message.
+  // ------------------------------------------------------------------
+  const galleryCache = { data: null, at: 0 };
+  async function fetchGallery(force) {
+    const CfG = (EDITION.settings && EDITION.settings.backup) || {};
+    const space = CfG.space || EDITION.slug || 'edition';
+    if (!force && galleryCache.data && Date.now() - galleryCache.at < 60e3) return galleryCache.data;
+    const res = await fetch('api/gallery?space=' + encodeURIComponent(space), { cache: 'no-store' });
+    if (!res.ok) throw new Error('load ' + res.status);
+    const data = await res.json();
+    galleryCache.data = data; galleryCache.at = Date.now();
+    return data;
+  }
+
+  function mediaBack() {
+    return `<header class="rh">
+      <a class="iconbtn" href="#/anukram" aria-label="${esc(t('book.contentsLabel'))}">${MOTIF.contents()}</a>
+      <span class="rh-t">${esc(t('book.coverTitle'))}</span>
+      <a class="iconbtn" href="#/kitaab" aria-label="${esc(t('book.close'))}">${MOTIF.bookShut()}</a>
+    </header>`;
+  }
+
+  // Photo collage
+  async function tasveerein() {
+    render(`<main class="screen bookscreen"><article class="book page-gallery">
+      ${mediaBack()}
+      <h1 class="big-title gall-h">${esc(t('gallery.photos.title'))}</h1>
+      <p class="chap-sub">${esc(t('gallery.photos.sub'))}</p>
+      <div id="gall" class="collage"><p class="muted center">${esc(t('gallery.loading'))}</p></div>
+      <div class="spacer"></div>
+      <a class="btn soft" href="#/anukram" style="margin-top:12px">${esc(t('chapter.back'))}</a>
+    </article></main>`, 'desk');
+    const box = $app.querySelector('#gall');
+    try {
+      const data = await fetchGallery();
+      const photos = (data.photos || []);
+      if (!photos.length) { box.innerHTML = `<p class="muted center">${esc(t('gallery.photos.empty'))}</p>`; return; }
+      box.innerHTML = photos.map((p, i) => `
+        <figure class="tile" data-i="${i}">
+          <img src="${esc(p.url)}" alt="${esc(p.caption || '')}" loading="lazy">
+          ${p.caption ? `<figcaption>${esc(p.caption)}</figcaption>` : ''}
+        </figure>`).join('');
+      // tap a tile to view it big
+      box.querySelectorAll('.tile').forEach((el) => el.addEventListener('click', () => {
+        const p = photos[+el.dataset.i];
+        const s = UI.sheet(`<img src="${esc(p.url)}" alt="${esc(p.caption || '')}" style="max-width:100%;border-radius:10px">${p.caption ? `<p class="hand" style="margin-top:10px">${esc(p.caption)}</p>` : ''}<button class="btn ghost" data-close style="margin-top:12px">${esc(t('menu.close'))}</button>`, { label: 'Photo' });
+        s.el.querySelector('[data-close]').addEventListener('click', () => s.close());
+      }));
+    } catch (e) {
+      box.innerHTML = `<p class="muted center">${esc(t('gallery.offline'))}</p>`;
+    }
+  }
+
+  // Recordings (video + audio) gathered from other people
+  async function aawaazein() {
+    render(`<main class="screen bookscreen"><article class="book page-gallery">
+      ${mediaBack()}
+      <h1 class="big-title gall-h">${esc(t('gallery.voices.title'))}</h1>
+      <p class="chap-sub">${esc(t('gallery.voices.sub'))}</p>
+      <div id="gall" class="rec-list"><p class="muted center">${esc(t('gallery.loading'))}</p></div>
+      <div class="spacer"></div>
+      <a class="btn soft" href="#/anukram" style="margin-top:12px">${esc(t('chapter.back'))}</a>
+    </article></main>`, 'desk');
+    const box = $app.querySelector('#gall');
+    try {
+      const data = await fetchGallery();
+      const vids = (data.videos || []);
+      if (!vids.length) { box.innerHTML = `<p class="muted center">${esc(t('gallery.voices.empty'))}</p>`; return; }
+      const isVideo = (ext) => ['mp4', 'webm', 'mov', 'm4v'].includes((ext || '').toLowerCase());
+      box.innerHTML = vids.map((v) => `
+        <figure class="rec-card">
+          ${isVideo(v.ext)
+            ? `<video src="${esc(v.url)}" controls preload="metadata" playsinline></video>`
+            : `<audio src="${esc(v.url)}" controls preload="metadata"></audio>`}
+          ${v.caption ? `<figcaption class="hand">${esc(v.caption)}</figcaption>` : ''}
+        </figure>`).join('');
+    } catch (e) {
+      box.innerHTML = `<p class="muted center">${esc(t('gallery.offline'))}</p>`;
+    }
+  }
+
   function menu() {
     const phone = EDITION.helpContact && !SS.isPH(EDITION.helpContact.phone) ? EDITION.helpContact.phone : null;
     const s = UI.sheet(`
       <h2>${esc(r(EDITION.title))}</h2>
       <button class="opt" data-go="#/janamdin">${esc(t('menu.replay'))}</button>
       <button class="opt" data-go="#/shubhkamnayein">${esc(t('menu.greetings'))}</button>
+      <button class="opt" data-go="#/tasveerein">${esc(t('menu.photos'))}</button>
+      <button class="opt" data-go="#/aawaazein">${esc(t('menu.voices'))}</button>
       <button class="opt" data-go="#/tohfa">${esc(t('menu.tohfa'))}</button>
       <button class="opt" data-go="#/kitaab">${esc(t('menu.book'))}</button>
       <button class="opt" data-share>${esc(t('menu.share'))}</button>

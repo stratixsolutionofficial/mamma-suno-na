@@ -637,3 +637,35 @@ body.less-motion.recording .diya.lit .diya-glow { animation: breathe 1.6s infini
   *, *::before, *::after { animation-duration: 200ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 200ms !important; }
   .dust, .page-sweep { display: none; }
 }
+
+/* ------------------------------------------------------------------ */
+/* Album: photo collage (#/tasveerein) + recordings (#/aawaazein)      */
+/* ------------------------------------------------------------------ */
+.page-gallery { max-width: 60rem; margin: 0 auto; }
+.gall-h { margin: 8px 0 2px; }
+.page-gallery .chap-sub { margin: 0 0 18px; }
+.center { text-align: center; }
+
+/* masonry-ish collage; falls back to a simple grid where unsupported */
+.collage { column-count: 2; column-gap: 12px; }
+@media (min-width: 560px) { .collage { column-count: 3; } }
+@media (min-width: 900px) { .collage { column-count: 4; } }
+.collage .tile {
+  break-inside: avoid; margin: 0 0 12px; padding: 8px 8px 10px; background: #FFFDF8;
+  border: 1px solid var(--ss-paper-edge); border-radius: 8px; cursor: pointer;
+  box-shadow: 0 1px 3px rgba(42,32,24,.08); transition: transform .15s, box-shadow .15s;
+}
+.collage .tile:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(42,32,24,.14); }
+.collage .tile img { width: 100%; display: block; border-radius: 4px; }
+.collage .tile figcaption { font-size: .9rem; color: var(--ss-ink-soft); margin-top: 6px; text-align: center; font-family: 'Mukta', system-ui, sans-serif; }
+
+/* recordings: one card per row, inline player */
+.rec-list { display: grid; gap: 16px; }
+@media (min-width: 720px) { .rec-list { grid-template-columns: 1fr 1fr; } }
+.rec-card {
+  margin: 0; padding: 12px; background: #FFFDF8; border: 1px solid var(--ss-paper-edge);
+  border-radius: 10px; box-shadow: 0 1px 3px rgba(42,32,24,.08);
+}
+.rec-card video { width: 100%; border-radius: 6px; display: block; background: #000; }
+.rec-card audio { width: 100%; display: block; }
+.rec-card figcaption { margin-top: 10px; color: var(--ss-ink-soft); font-size: 1.05rem; text-align: center; }
