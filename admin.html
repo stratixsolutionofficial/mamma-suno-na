@@ -179,14 +179,14 @@
       return res.json();
     }
 
-    const IMG_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    const IMG_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif'];
     const VID_EXT = ['mp4', 'webm', 'mov', 'm4v'];
     const AUD_EXT = ['m4a', 'mp3', 'ogg', 'wav', 'aac'];
     const slug = (s) => (s || 'file').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
     const extOf = (name, mime) => {
       let e = (name.split('.').pop() || '').toLowerCase();
       if (IMG_EXT.includes(e) || VID_EXT.includes(e) || AUD_EXT.includes(e)) return e;
-      if (/^image\//.test(mime)) return mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : mime === 'image/gif' ? 'gif' : 'jpg';
+      if (/^image\//.test(mime)) return mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : mime === 'image/gif' ? 'gif' : mime === 'image/heic' ? 'heic' : mime === 'image/heif' ? 'heif' : 'jpg';
       if (/^video\//.test(mime)) return mime === 'video/webm' ? 'webm' : 'mp4';
       if (/^audio\//.test(mime)) return 'm4a';
       return 'bin';

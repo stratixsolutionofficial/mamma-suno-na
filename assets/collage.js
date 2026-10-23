@@ -13,7 +13,7 @@
   'use strict';
   const esc = SS.esc;
   const VIDEO_EXT = ['mp4', 'webm', 'mov', 'm4v'];
-  const PHOTO_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'];
+  const PHOTO_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'heic', 'heif'];
 
   // ------------------------------------------------------------------
   // Items: what was uploaded in admin -> "Collage media" (api/gallery):
