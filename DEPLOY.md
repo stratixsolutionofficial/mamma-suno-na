@@ -87,6 +87,15 @@ Layout in Blob:
 Each media upload is capped at 200 MB (fine for a short phone video). Longer
 videos are better linked than uploaded.
 
+Photos/videos don't pass through a function (Vercel caps function request
+bodies at 4.5 MB). The browser gets a short-lived, single-path token from
+`/api/upload-token` (admin key checked there) and uploads straight to Blob,
+multipart above 8 MB. Mamma's voice-note segments use the same route only when
+one is over 4 MB; small JSON still goes through `/api/upload`. The browser
+client is `assets/vendor/blob-client.js`, a committed build of
+`@vercel/blob/client`. Rebuild it with `npm run build:blob-client` if you bump
+`@vercel/blob`. No build step runs on Vercel.
+
 ## Local testing (optional, before deploying)
 
 `dev-server.mjs` fakes Vercel Blob on disk so you can test the whole flow
@@ -98,7 +107,10 @@ ADMIN_SECRET=test123 node dev-server.mjs
 # Admin: http://localhost:3000/admin.html  (password: test123)
 ```
 
-Uploads land in `./.localblob` (gitignored); delete it to reset. The JSON shapes
+Uploads land in `./.localblob` (gitignored); delete it to reset. The dev
+server also fakes the Blob upload API (`/_blobapi`) so direct uploads run the
+same client code, and it rejects function bodies over 4.5 MB with 413 like
+Vercel does. The JSON shapes
 and auth rules match the real `api/*.js`, so what works here works on Vercel.
 
 ## How it stores things

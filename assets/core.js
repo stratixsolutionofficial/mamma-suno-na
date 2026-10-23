@@ -709,12 +709,51 @@
   // IndexedDB stays the source of truth; this just mirrors each kept answer
   // (its JSON + audio segments) up to the family's private Blob store, so the
   // kids receive answers without her having to tap "Send a copy".
-  //   - uploads go through /api/upload (signed client upload; token stays server-side)
+  //   - uploads go through /api/upload (token stays server-side); segments over
+  //     4 MB use SS.directUpload (client token from /api/upload-token)
   //   - a per-segment "already uploaded" marker avoids re-sending audio
   //   - runs in preview? no. runs offline? queued, retried on reconnect.
   // Disabled automatically when the app is opened from file:// or when the API
   // isn't there (pure static hosting), so nothing breaks without a backend.
   // ------------------------------------------------------------------
+  // ------------------------------------------------------------------
+  // Direct-to-Blob upload for files too big for a serverless function.
+  // Vercel caps a function request body at 4.5 MB, so large files get a
+  // short-lived client token from api/upload-token and go straight to Blob
+  // (multipart above 8 MB). The Blob client is loaded lazily, only when needed.
+  //   SS.directUpload(path, file, { adminKey, onProgress(pct) }) -> { url, pathname }
+  // Locally, dev-server.mjs answers GET api/upload-token with a fake Blob API
+  // URL so the exact same client code runs against ./.localblob.
+  // ------------------------------------------------------------------
+  SS.FUNCTION_BODY_LIMIT = 4 * 1024 * 1024; // stay safely under Vercel's 4.5 MB
+  let blobClient = null;
+  async function loadBlobClient() {
+    if (!blobClient) {
+      blobClient = (async () => {
+        try {
+          const cfg = await fetch('api/upload-token', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : {}));
+          if (cfg && cfg.blobApiUrl) globalThis.__VERCEL_BLOB_API_URL = cfg.blobApiUrl; // must be set before import
+        } catch (e) { /* real Vercel Blob */ }
+        return import(new URL('assets/vendor/blob-client.js', location.href).href);
+      })();
+      blobClient.catch(() => { blobClient = null; }); // allow a retry after a failed load
+    }
+    return blobClient;
+  }
+  SS.directUpload = async function (path, file, opts) {
+    opts = opts || {};
+    const { upload } = await loadBlobClient();
+    const r = await upload(path, file, {
+      access: 'public',
+      handleUploadUrl: 'api/upload-token',
+      clientPayload: opts.adminKey ? JSON.stringify({ key: opts.adminKey }) : undefined,
+      contentType: file.type || undefined,
+      multipart: file.size > 8 * 1024 * 1024,
+      onUploadProgress: opts.onProgress ? (p) => opts.onProgress(p.percentage) : undefined
+    });
+    return { url: r.url, pathname: r.pathname };
+  };
+
   SS.backup = (function () {
     const CfG = (EDITION.settings && EDITION.settings.backup) || {};
     const enabled = () => !SS.preview && CfG.enabled !== false && location.protocol.startsWith('http');
@@ -728,9 +767,10 @@
     let running = false, pending = false;
 
     async function putBlob(path, body, contentType) {
-      // Ask our serverless route for a one-time upload; it returns the final URL.
-      // We send the bytes to the route, which streams them to Blob with the
-      // server-side token. Simple and avoids shipping any secret to the browser.
+      // Small bodies (answer JSON, a normal voice-note segment) go through our
+      // route, which writes to Blob with the server-side token. Anything near
+      // Vercel's 4.5 MB function limit goes direct with a client token instead.
+      if (body instanceof Blob && body.size > SS.FUNCTION_BODY_LIMIT) return SS.directUpload(path, body);
       const res = await fetch('api/upload?path=' + encodeURIComponent(path), {
         method: 'POST',
         headers: { 'content-type': contentType || 'application/octet-stream' },

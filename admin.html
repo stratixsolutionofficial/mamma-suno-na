@@ -159,6 +159,16 @@
       if (!res.ok) throw new Error('Upload failed (' + res.status + ')');
       return res.json();
     }
+    // Photos/videos: direct-to-Blob client upload (see SS.directUpload in core.js).
+    async function apiPutFile(path, file, onProgress) {
+      try { return await SS.directUpload(path, file, { adminKey: KEY, onProgress }); }
+      catch (e) {
+        const m = String((e && e.message) || e);
+        // the token route answers 401/400 for a wrong key or a disallowed path; the SDK reports both like this
+        if (/client token/i.test(m)) throw new Error('upload refused (wrong admin key, unsupported file type, or the server is running old code).');
+        throw new Error(m);
+      }
+    }
     async function apiDelete(path) {
       const res = await fetch('api/upload?path=' + encodeURIComponent(path), { method: 'DELETE', headers: { 'x-admin-key': KEY } });
       if (!res.ok && res.status !== 200) throw new Error('Delete failed (' + res.status + ')');
@@ -260,7 +270,9 @@
         const path = mediaPath(kind, id, useExt);
         say('Uploading ' + (i + 1) + '/' + list.length + ' — ' + f.name, false, where);
         try {
-          await apiPut(path, f, f.type);
+          // Media goes straight to Blob with a client token: Vercel functions
+          // can't receive more than 4.5 MB, which most phone videos exceed.
+          await apiPutFile(path, f, (pct) => { bar.style.width = Math.round(((i + pct / 100) / list.length) * 100) + '%'; });
           // greetings: no file-name caption (Mamma doesn't see captions there)
           const cap = kind === 'greeting' ? '' : f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
           // order = upload time (+i keeps a multi-select in the picked order)

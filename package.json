@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "description": "Mamma, Sunao Na — a digital kahani with optional Vercel Blob backup",
+  "scripts": {
+    "build:blob-client": "esbuild scripts/blob-client-entry.js --bundle --format=esm --platform=browser --minify --legal-comments=none --define:process.env.VERCEL_BLOB_API_URL=globalThis.__VERCEL_BLOB_API_URL --outfile=assets/vendor/blob-client.js"
+  },
   "dependencies": {
     "@vercel/blob": "^0.27.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
   }
 }
