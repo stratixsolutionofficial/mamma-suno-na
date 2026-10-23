@@ -52,7 +52,7 @@
     return Math.hypot(dx, dy);
   }
   function candidates(s, W, H, B, rand) {
-    const h = s * H_OF, step = s * 0.74, out = [];
+    const h = s * H_OF, step = s * 1.1, out = [];
     for (let cy = h * 0.42; cy <= H - h * 0.36; cy += step * 1.05) {
       for (let cx = s * 0.4; cx <= W - s * 0.36; cx += step) {
         const x = cx + (rand() - 0.5) * step * 0.5, y = cy + (rand() - 0.5) * step * 0.5;
@@ -88,8 +88,8 @@
   }
   function layout(n, W, H, B, seed) {
     const free = Math.max(W * H - B.w * B.h * 0.85, W * H * 0.2);
-    const sMax = Math.min(230, W * 0.4, H * 0.3);
-    const sMin = Math.min(sMax, Math.max(66, Math.min(100, W * 0.19)));
+    const sMax = Math.min(460, W * 0.4, H * 0.3);
+    const sMin = Math.min(sMax, Math.max(66, Math.min(200, W * 0.19)));
     let s = clamp(Math.sqrt((free * 0.42) / Math.max(n, 1)), sMin, sMax);
     let cand = [];
     for (let i = 0; i < 10; i++) {
