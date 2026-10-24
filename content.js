@@ -27,7 +27,7 @@ const EDITION = {
   localeDefault: "hinglish",            // "hinglish" | "hindi"
   theme: "maa-haldi",
   pin: "231070",                        // digits (4-6). PLACEHOLDER = no PIN screen.
-  pinHint: "{{sunny}} ka janamdin (DDMM)",
+  pinHint: "",
   helpContact: { label: "Sunny", phone: "PLACEHOLDER" },  // "+91XXXXXXXXXX"
   settings: {
     reveal: {
